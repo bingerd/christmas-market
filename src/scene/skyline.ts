@@ -1,5 +1,6 @@
-// Background layer: Amsterdam-style canal houses with warm windows, a church
-// tower, and a faint network of light nodes on the rooftops (the Xebia touch).
+// Background layer: Amsterdam-style canal houses with warm windows, a dark
+// church tower (no lit clock, it competed with the hero text), and a faint
+// network of light nodes on the rooftops (the Xebia touch).
 import { rng } from './iso.ts'
 
 const W = 480
@@ -50,8 +51,6 @@ export const skylineSvg = () => {
       houses += `<rect x="${x + 4}" y="${H - 128}" width="${tw - 8}" height="16" fill="#1e1640"/>`
       houses += `<rect x="${x + 8}" y="${H - 146}" width="${tw - 16}" height="18" fill="#1e1640"/>`
       houses += `<rect x="${x + 10}" y="${H - 150}" width="2" height="4" fill="#1e1640"/>`
-      windows += `<rect x="${x + 7}" y="${H - 104}" width="8" height="8" fill="#ffe7a8" class="clock"/>`
-      windows += `<rect x="${x + 10}" y="${H - 103}" width="1" height="4" fill="#1e1640"/><rect x="${x + 10}" y="${H - 100}" width="3" height="1" fill="#1e1640"/>`
       nodes.push([x + 11, H - 151])
       x += tw + 2
       i++

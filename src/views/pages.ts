@@ -56,6 +56,7 @@ export const market = (state: State) => `
       <p class="eyebrow">The market square</p>
       <h1 id="market-title">Step up to a stall</h1>
       <p class="section-lead">Hover a stall to light it up, click to see what's on offer. You can pick one present.</p>
+      <p class="square-hint">Psst… click the square itself for a little dance (sound on).</p>
     </header>
     <div class="market-map layer" style="--depth:6">${villageSvg({ interactive: true })}</div>
     <nav class="stall-index" aria-label="All stalls">

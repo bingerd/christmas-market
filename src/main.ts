@@ -3,6 +3,8 @@ import { FORM_FIELDS, FORM_TYPE_LABELS, FORM_URL, NO_DELIVERY_LABEL } from './co
 import { buildFormUrl } from './formLink.ts'
 import { needsDelivery } from './pick.ts'
 import { installParallax } from './scene/parallax.ts'
+import { santaSvg } from './scene/santa.ts'
+import { installDance } from './scene/village.ts'
 import { skylineSvg, starsSvg } from './scene/skyline.ts'
 import { type State, load, reset, save } from './state.ts'
 import * as pages from './views/pages.ts'
@@ -12,6 +14,7 @@ const app = document.querySelector<HTMLElement>('#app')!
 const pill = document.querySelector<HTMLElement>('#pick-pill')!
 document.querySelector('#sky-stars')!.innerHTML = starsSvg()
 document.querySelector('#sky-line')!.innerHTML = skylineSvg()
+document.querySelector('#sky-santa .sleigh')!.innerHTML = santaSvg()
 
 let state: State = load()
 let rendered = ''
@@ -138,5 +141,6 @@ app.addEventListener('submit', (e) => {
 
 installPhotoPixelator(app)
 installParallax(document.documentElement)
+installDance(app)
 window.addEventListener('hashchange', () => render())
 render(false)

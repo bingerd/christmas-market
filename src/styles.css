@@ -184,9 +184,6 @@ body:not([data-page='home']) #sky-line {
 .flicker {
   animation: flicker 5s steps(1) infinite;
 }
-.clock {
-  filter: drop-shadow(0 0 4px #ffcf6b);
-}
 .net .trail {
   stroke-dasharray: 3 97;
   animation: trail 9s linear infinite;
@@ -218,6 +215,47 @@ body:not([data-page='home']) #sky-line {
   }
   to {
     stroke-dashoffset: 0;
+  }
+}
+
+/* --- santa: one pass across the sky every ~45s ----------------------------- */
+#sky-santa {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+#sky-santa .sleigh {
+  position: absolute;
+  top: 13vh;
+  left: 0;
+  width: clamp(170px, 18vw, 280px);
+  transform: translateX(-120%);
+  animation: santa 45s linear 5s infinite;
+}
+#sky-santa svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  animation: bob 1.4s ease-in-out infinite;
+}
+#sky-santa .legs {
+  animation: flame 0.36s steps(1) infinite;
+}
+#sky-santa .lb {
+  opacity: 0;
+  animation-name: flame-b;
+}
+#sky-santa .dust {
+  fill: #ffe7a8;
+  animation: twinkle 0.6s steps(2) infinite;
+}
+@keyframes santa {
+  0% {
+    transform: translate(-120%, 4vh);
+  }
+  30%,
+  100% {
+    transform: translate(calc(100vw + 20%), -4vh);
   }
 }
 
@@ -444,6 +482,15 @@ main {
   color: var(--text-2);
 }
 
+.square-hint {
+  margin-top: 10px;
+  font-family: var(--font-label);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  opacity: 0.8;
+}
+
 /* --- progress steps ------------------------------------------------------ */
 .steps {
   display: flex;
@@ -619,6 +666,60 @@ main {
     opacity: 1;
   }
 }
+.village .sparkle {
+  fill: #fff;
+  animation: twinkle 3s steps(2) infinite;
+}
+.village .pool-fire,
+.village .fire-glow {
+  animation: fire-glow 2.2s steps(4) infinite alternate;
+}
+@keyframes fire-glow {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.village .flame.fa {
+  animation: flame 0.5s steps(1) infinite;
+}
+.village .flame.fb {
+  opacity: 0;
+  animation: flame-b 0.5s steps(1) infinite;
+}
+@keyframes flame {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes flame-b {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.village .spark {
+  fill: #ffb347;
+  opacity: 0;
+  animation: spark 2.2s ease-out infinite;
+}
+@keyframes spark {
+  from {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(4px, -26px);
+  }
+}
 .village .floor-trails polyline {
   fill: none;
   stroke: var(--cyan);
@@ -669,6 +770,40 @@ main {
 @keyframes stroll {
   to {
     transform: translate(-28px, 14px);
+  }
+}
+.village {
+  cursor: pointer;
+}
+.village .notes {
+  opacity: 0;
+}
+.village.dancing .dancer {
+  animation: dance 0.5s steps(2) infinite;
+}
+.village.dancing .person:nth-of-type(even) .dancer {
+  animation-delay: -0.25s;
+}
+.village.dancing .notes {
+  animation: notes 1s steps(4) infinite;
+}
+/* hop and sway; a scaleX(-1) flip makes Chrome drop these SVG groups */
+@keyframes dance {
+  0% {
+    transform: translateY(0) rotate(-8deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(8deg);
+  }
+}
+@keyframes notes {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
   }
 }
 .village .tag {

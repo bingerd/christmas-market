@@ -5,6 +5,7 @@ import { charities, suppliers } from '../catalog.ts'
 import { rects, type Grid } from '../pixel.ts'
 import { AVATAR, PAL, productFor } from '../sprites.ts'
 import { pixelText, textWidth } from './font.ts'
+import { playJingle } from './music.ts'
 import { iso, rng } from './iso.ts'
 
 const N = 12
@@ -32,19 +33,39 @@ interface Item {
 
 // --- floor -------------------------------------------------------------------
 
+const COBBLE = ['#9c8fb4', '#8f82a8', '#a597bb']
+const SNOW_TILES = ['#f2f5ff', '#eaf0fc', '#e3e9f8']
+
 const floor = () => {
   let out = ''
   // slab edges give the room its Habbo "floating platform" depth
   out += poly('#2b2160', at(0, N), at(N, N), at(N, N, -10), at(0, N, -10))
   out += poly('#1f1748', at(N, 0), at(N, N), at(N, N, -10), at(N, 0, -10))
+  // snow along the slab rim
+  out += poly(SNOW_SIDE, at(0, N), at(N, N), at(N, N, -3), at(0, N, -3))
+  out += poly('#b4bfdc', at(N, 0), at(N, N), at(N, N, -3), at(N, 0, -3))
   const r = rng(3)
+  let detail = ''
   for (let x = 0; x < N; x++)
     for (let y = 0; y < N; y++) {
       const path = x === 5 || x === 6 || y === 5 || y === 6
-      const shade = r() < 0.2 ? 1 : 0
-      const fill = path ? ['#cdc3ea', '#bfb3e2'][(x + y + shade) % 2] : ['#f2f5ff', '#e4eaf9'][(x + y + shade) % 2]
-      out += I.tile(x, y, 1, 1, fill, 'stroke="#b4bfdc" stroke-width=".4"')
+      const n = r()
+      // the paths are swept cobblestones with the odd patch of fresh snow
+      if (path && n > 0.25) {
+        out += I.tile(x, y, 1, 1, COBBLE[Math.floor(r() * 3)], 'stroke="#7d7096" stroke-width=".5"')
+        for (const [sx, sy] of [[0.3, 0.35], [0.65, 0.6]]) {
+          const [a, b] = at(x + sx, y + sy)
+          detail += `<rect x="${Math.round(a) - 2}" y="${Math.round(b)}" width="4" height="1" fill="#6f6390"/>`
+        }
+      } else {
+        out += I.tile(x, y, 1, 1, SNOW_TILES[Math.floor(n * 3)], 'stroke="#dbe2f3" stroke-width=".3"')
+        if (r() < 0.14) {
+          const [a, b] = at(x + 0.5, y + 0.5)
+          detail += `<rect class="sparkle" x="${Math.round(a)}" y="${Math.round(b)}" width="1" height="1" style="animation-delay:${(r() * 3).toFixed(1)}s"/>`
+        }
+      }
     }
+  out += detail + footprints([[3.2, 11.8], [8.1, 10.1]]) + footprints([[11.8, 4.4], [10.2, 8]])
   // faint light trail running along the path, the digital layer of the square
   const trail = [at(5.5, 0), at(5.5, N)].map(([a, b]) => `${a},${b}`).join(' ')
   const trail2 = [at(0, 5.5), at(N, 5.5)].map(([a, b]) => `${a},${b}`).join(' ')
@@ -52,10 +73,23 @@ const floor = () => {
   return out
 }
 
+/** A line of boot prints in the snow, from one tile point to another. */
+const footprints = ([[x0, y0], [x1, y1]]: [number, number][]) => {
+  const steps = Math.round(Math.hypot(x1 - x0, y1 - y0) / 0.42)
+  let out = ''
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    const side = i % 2 ? 0.08 : -0.08
+    const [a, b] = at(x0 + (x1 - x0) * t + side, y0 + (y1 - y0) * t - side)
+    out += `<rect x="${Math.round(a) - 1}" y="${Math.round(b)}" width="3" height="1" fill="#c3cbe6"/>`
+  }
+  return out
+}
+
 /** Warm light pool on the snow in front of a light source. */
 const pool = (x: number, y: number, rx = 46, ry = 18, color = 'warm') => {
   const [cx, cy] = at(x, y)
-  return `<ellipse class="pool" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#pool-${color})"/>`
+  return `<ellipse class="pool pool-${color}" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#pool-${color})"/>`
 }
 
 // --- stalls --------------------------------------------------------------------
@@ -279,10 +313,15 @@ const ledSign = (x: number, y: number, message: string) => {
 
 // --- people ----------------------------------------------------------------------
 
+const NOTE: Grid = ['..kk', '..kk', '..k.', '..k.', 'kkk.', 'kkk.']
+
 const person = (x: number, y: number, shirt: string, hair: string, cls: string, flip = false) => {
   const [a, b] = at(x, y)
   const body = rects(AVATAR, { ...PAL, t: shirt, h: hair })
-  return `<g class="walker ${cls}"><g transform="translate(${a - 7} ${b - 29}) scale(1.5)${flip ? ' translate(10 0) scale(-1 1)' : ''}">${body}</g></g>`
+  const notes = `<g class="notes">${rects(NOTE, { k: '#ffd23f' }, a - 9, b - 40)}${rects(NOTE, { k: '#ff7ab8' }, a + 5, b - 44)}</g>`
+  // transform-origin in user units: fill-box on a <g> isn't reliable, and the
+  // dance flip has to pivot on the person's feet
+  return `<g class="person ${cls}"><g class="dancer" style="transform-origin:${a}px ${b}px"><g transform="translate(${a - 7} ${b - 29}) scale(1.5)${flip ? ' translate(10 0) scale(-1 1)' : ''}">${body}</g></g>${notes}</g>`
 }
 
 const lamp = (x: number, y: number) => {
@@ -293,11 +332,103 @@ const lamp = (x: number, y: number) => {
     <circle cx="${a}" cy="${b - 50}" r="16" fill="url(#halo)"/>`
 }
 
+// --- fire pit, snowman, drifts ---------------------------------------------------
+
+const FIRE_PAL = { r: '#e8461e', o: '#ff8a2a', y: '#ffd25e', w: '#fff3c4' }
+const FLAME: Grid = [
+  '.....r......',
+  '....rr......',
+  '....rr...r..',
+  '...rro..rr..',
+  '...roo..ro..',
+  '..rrooorro..',
+  '..rooyoooor.',
+  '.rrooyyooor.',
+  '.rooyyyyoorr',
+  '.rooyywyyoor',
+  'rrooywwwyoor',
+  'rooyywwwyyor',
+  'rooyywwwyyor',
+  '.rooyyyyyoor',
+  '.rrooooooorr',
+  '..rrrrrrrr..',
+]
+const FLAME_B = FLAME.map((row) => [...row].reverse().join(''))
+
+const firePit = (x: number, y: number) => {
+  const [cx, cy] = at(x, y)
+  const stones = Array.from({ length: 12 }, (_, i) => {
+    const t = (i / 12) * Math.PI * 2
+    return [Math.round(cx + Math.cos(t) * 15), Math.round(cy + Math.sin(t) * 7), Math.sin(t)] as const
+  })
+  const stone = ([a, b]: readonly [number, number, number], i: number) =>
+    `<rect x="${a - 3}" y="${b - 3}" width="6" height="4" fill="${i % 2 ? '#6b6286' : '#544b70'}"/><rect x="${a - 3}" y="${b - 4}" width="6" height="1" fill="${SNOW}"/>`
+  let g = `<circle class="fire-glow" cx="${cx}" cy="${cy - 14}" r="54" fill="url(#fire-halo)"/>`
+  g += stones.filter((s) => s[2] < 0).map(stone).join('')
+  g += `<ellipse cx="${cx}" cy="${cy}" rx="12" ry="5" fill="#2a120c"/>`
+  g += `<rect x="${cx - 7}" y="${cy - 1}" width="2" height="1" fill="#ff7a2e"/><rect x="${cx + 4}" y="${cy}" width="2" height="1" fill="#ff7a2e"/>`
+  // two crossed logs
+  g += `<rect x="${cx - 11}" y="${cy - 3}" width="22" height="3" fill="${WOOD}"/><rect x="${cx - 11}" y="${cy - 3}" width="2" height="3" fill="#c98a5a"/>`
+  g += `<rect x="${cx - 6}" y="${cy - 5}" width="12" height="3" fill="${WOOD_DARK}"/><rect x="${cx + 4}" y="${cy - 5}" width="2" height="3" fill="#c98a5a"/>`
+  // flames: two frames swapped in CSS, sparks drifting up
+  const fx = cx - 9
+  const fy = cy - 27
+  g += `<g class="flame fa" transform="translate(${fx} ${fy}) scale(1.5)">${rects(FLAME, FIRE_PAL)}</g>`
+  g += `<g class="flame fb" transform="translate(${fx} ${fy}) scale(1.5)">${rects(FLAME_B, FIRE_PAL)}</g>`
+  g += [-5, 2, 6, -1]
+    .map((dx, i) => `<rect class="spark" x="${cx + dx}" y="${cy - 26}" width="2" height="2" style="animation-delay:${i * 0.55}s"/>`)
+    .join('')
+  g += stones.filter((s) => s[2] >= 0).map(stone).join('')
+  return g
+}
+
+/** Log bench with a cap of snow, footprint w × d tiles. */
+const bench = (x: number, y: number, w: number, d: number) => box(x, y, w, d, 0, 5, '#a06a3f', WOOD, WOOD_DARK) + box(x + 0.05, y + 0.05, w - 0.1, d - 0.1, 5, 6, SNOW, SNOW, SNOW_SIDE)
+
+const SNOWMAN: Grid = [
+  '....kkkk....',
+  '....kkkk....',
+  '...kkkkkk...',
+  '...wwwwww...',
+  '..wwkwwkwS..',
+  '..wwwwwooo..',
+  '..wwwwwwwS..',
+  '...wwwwwS...',
+  '..rrrrrrrr..',
+  '.wwwwrrwwwS.',
+  '.wwwwrkwwwS.',
+  'wwwwwwwwwwwS',
+  'wwwwwkwwwwwS',
+  'wwwwwwwwwwSS',
+  '.wwwwwwwwwS.',
+  '..SSSSSSSS..',
+]
+
+const snowman = (x: number, y: number) => {
+  const [a, b] = at(x, y)
+  const pal = { k: '#1b1028', w: '#f4f7ff', S: SNOW_SIDE, r: '#c8102e', o: '#ff8a2a' }
+  return `<rect x="${a - 15}" y="${b - 15}" width="7" height="1" fill="${WOOD_DEEP}"/><rect x="${a + 8}" y="${b - 17}" width="7" height="1" fill="${WOOD_DEEP}"/>
+    <g transform="translate(${a - 9} ${b - 24}) scale(1.5)">${rects(SNOWMAN, pal)}</g>`
+}
+
+/** Stepped pixel snow drift. */
+const drift = (x: number, y: number, w = 22) => {
+  const [a, b] = at(x, y)
+  let out = ''
+  for (let i = 0; i < 3; i++) {
+    const rw = w - i * 8
+    out += `<rect x="${Math.round(a - rw / 2)}" y="${Math.round(b - (i + 1) * 3)}" width="${rw}" height="3" fill="${i ? SNOW : SNOW_SIDE}"/>`
+  }
+  return out
+}
+
 // --- composition -----------------------------------------------------------------
 
 const DEFS = `<defs>
   <radialGradient id="pool-warm"><stop offset="0" stop-color="#ffcf6b" stop-opacity=".55"/><stop offset="1" stop-color="#ffcf6b" stop-opacity="0"/></radialGradient>
   <radialGradient id="halo"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".7"/><stop offset=".4" stop-color="#ffcf6b" stop-opacity=".25"/><stop offset="1" stop-color="#ffcf6b" stop-opacity="0"/></radialGradient>
+  <radialGradient id="pool-fire"><stop offset="0" stop-color="#ff9a3c" stop-opacity=".6"/><stop offset="1" stop-color="#ff7a2e" stop-opacity="0"/></radialGradient>
+  <radialGradient id="fire-halo"><stop offset="0" stop-color="#ffb45e" stop-opacity=".55"/><stop offset=".45" stop-color="#ff7a2e" stop-opacity=".18"/><stop offset="1" stop-color="#ff7a2e" stop-opacity="0"/></radialGradient>
   <linearGradient id="interior" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#8a4a1c"/></linearGradient>
 </defs>`
 
@@ -365,13 +496,39 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
   items.push({ depth: 13.2, svg: lamp(9.8, 3.4) })
   pools.push(pool(3.4, 9.8, 24, 10), pool(9.8, 3.4, 24, 10))
 
-  items.push({ depth: 9.6, svg: person(5.4, 4.2, '#6c1d7f', '#3b2416', 'w1') })
-  items.push({ depth: 12.6, svg: person(4.2, 8.4, '#c8102e', '#e8c170', 'w2', true) })
-  items.push({ depth: 17.6, svg: person(8.2, 9.4, '#2b6cb0', '#1b1028', 'w3') })
-  items.push({ depth: 13.8, svg: person(9.6, 4.2, '#e5007d', '#7a3b12', 'w4', true) })
+  items.push({ depth: 9.6, svg: person(5.4, 4.2, '#6c1d7f', '#3b2416', 'walker w1') })
+  items.push({ depth: 12.6, svg: person(4.2, 8.4, '#c8102e', '#e8c170', 'walker w2', true) })
+  // the fire pit in the open front of the square, with people warming up
+  pools.push(pool(9.2, 9.2, 96, 42, 'fire'))
+  items.push({ depth: 18.4, svg: firePit(9.2, 9.2) })
+  items.push({ depth: 17, svg: person(8.1, 8.9, '#2b6cb0', '#1b1028', 'warm') })
+  items.push({ depth: 17.1, svg: person(9.1, 7.9, '#2e7d4f', '#e8c170', 'warm', true) })
+  items.push({ depth: 20.4, svg: bench(8.4, 10.4, 1.6, 0.35) })
+  items.push({ depth: 20.4, svg: bench(10.4, 8.4, 0.35, 1.6) })
+
+  items.push({ depth: 19.7, svg: snowman(11.4, 8.3) })
+  for (const [x, y, w] of [[11.4, 2.4, 22], [2.4, 11.4, 22], [0.8, 8.3, 16], [8.3, 0.8, 16], [11.3, 11.2, 26]] as const)
+    items.push({ depth: x + y, svg: drift(x, y, w) })
+  items.push({ depth: 13.8, svg: person(9.6, 4.2, '#e5007d', '#7a3b12', 'walker w4', true) })
 
   items.sort((a, b) => a.depth - b.depth)
   return `<svg class="village ${interactive ? 'is-interactive' : ''}" viewBox="0 0 ${VILLAGE_W} ${VILLAGE_H}" shape-rendering="crispEdges" role="${interactive ? 'group' : 'img'}" aria-label="Pixel-art Christmas market square">
     ${DEFS}${floor()}<g class="pools">${pools.join('')}</g>${items.map((i) => i.svg).join('')}
   </svg>`
+}
+
+/**
+ * Clicking the open square (not a stall) gets everyone dancing to a little
+ * Jingle Bells. One delegated listener covers the hero and the market map.
+ */
+export const installDance = (root: HTMLElement) => {
+  const timers = new WeakMap<Element, number>()
+  root.addEventListener('click', (e) => {
+    const target = e.target as Element
+    const village = target.closest('.village')
+    if (!village || target.closest('.hotspot[href]')) return
+    village.classList.add('dancing')
+    clearTimeout(timers.get(village))
+    timers.set(village, window.setTimeout(() => village.classList.remove('dancing'), playJingle() || 4500))
+  })
 }
