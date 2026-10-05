@@ -536,6 +536,7 @@ main {
 .hero {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   min-height: calc(100svh - 64px);
   margin: 0 calc(-1 * clamp(16px, 4vw, 48px));
@@ -546,7 +547,7 @@ main {
   position: relative;
   z-index: 2;
   max-width: 560px;
-  padding: 48px 0 40vh;
+  padding: 40px 0 0;
   animation: rise 1.2s var(--ease) both;
 }
 .hero h1 {
@@ -570,13 +571,14 @@ main {
   font-size: 19px;
   color: var(--text-2);
 }
+/* narrow screens: the square sits below the copy; wide: beside it */
 .hero-village {
-  position: absolute;
+  position: relative;
   z-index: 1;
-  left: 50%;
-  bottom: 0;
-  width: min(150vw, 760px);
-  margin-left: calc(min(150vw, 760px) / -2);
+  order: 1;
+  justify-self: center;
+  width: min(112vw, 640px);
+  margin-bottom: 48px;
   animation: rise 1.6s 0.15s var(--ease) both;
 }
 .hero-village svg {
@@ -619,6 +621,7 @@ main {
     padding: 0;
   }
   .hero-village {
+    position: absolute;
     left: auto;
     right: -3vw;
     bottom: 3vh;
