@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xebia Christmas Market</title>
+    <meta name="description" content="Pick one Christmas present from a local maker, or give it to charity." />
+    <meta name="theme-color" content="#0d0a24" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- One night sky behind every page; layers drift with the mouse. -->
+    <div class="backdrop" aria-hidden="true">
+      <div class="aurora layer" style="--depth: 4"><i></i><i></i></div>
+      <div id="sky-stars" class="layer" style="--depth: 3"></div>
+      <div id="sky-line" class="layer" style="--depth: 9"></div>
+      <div class="haze"></div>
+    </div>
+    <div class="snow" aria-hidden="true"><i></i><i></i><i class="near"></i></div>
+
+    <header class="topbar">
+      <a class="brand" href="#/" aria-label="Xebia Christmas Market, home">
+        <span class="brand-mark">xebia</span><span class="brand-sub">Christmas Market</span>
+      </a>
+      <div id="pick-pill"></div>
+    </header>
+
+    <main id="app"></main>
+
+    <footer class="foot">
+      <span>Xebia Christmas Market · Winter 2026</span>
+      <span>Made with pixels, snow and hot chocolate</span>
+    </footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

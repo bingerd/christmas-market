@@ -1,0 +1,377 @@
+// The market square: an isometric Habbo-style room with stalls, the tree,
+// the Xebia café and an LED sign. Used as hero backdrop and as the
+// interactive market map.
+import { charities, suppliers } from '../catalog.ts'
+import { rects, type Grid } from '../pixel.ts'
+import { AVATAR, PAL, productFor } from '../sprites.ts'
+import { pixelText, textWidth } from './font.ts'
+import { iso, rng } from './iso.ts'
+
+const N = 12
+const TW = 32
+const TH = 16
+const PAD_TOP = 120
+const OX = (N * TW) / 2 + 24
+const OY = PAD_TOP
+export const VILLAGE_W = OX * 2
+export const VILLAGE_H = OY + N * TH + 24
+
+const I = iso(OX, OY, TW, TH)
+const { at, poly, box } = I
+
+const SNOW = '#eef3ff'
+const SNOW_SIDE = '#c9d3ee'
+const WOOD = '#7b4a2d'
+const WOOD_DARK = '#5b3216'
+const WOOD_DEEP = '#3d2010'
+
+interface Item {
+  depth: number
+  svg: string
+}
+
+// --- floor -------------------------------------------------------------------
+
+const floor = () => {
+  let out = ''
+  // slab edges give the room its Habbo "floating platform" depth
+  out += poly('#2b2160', at(0, N), at(N, N), at(N, N, -10), at(0, N, -10))
+  out += poly('#1f1748', at(N, 0), at(N, N), at(N, N, -10), at(N, 0, -10))
+  const r = rng(3)
+  for (let x = 0; x < N; x++)
+    for (let y = 0; y < N; y++) {
+      const path = x === 5 || x === 6 || y === 5 || y === 6
+      const shade = r() < 0.2 ? 1 : 0
+      const fill = path ? ['#cdc3ea', '#bfb3e2'][(x + y + shade) % 2] : ['#f2f5ff', '#e4eaf9'][(x + y + shade) % 2]
+      out += I.tile(x, y, 1, 1, fill, 'stroke="#b4bfdc" stroke-width=".4"')
+    }
+  // faint light trail running along the path, the digital layer of the square
+  const trail = [at(5.5, 0), at(5.5, N)].map(([a, b]) => `${a},${b}`).join(' ')
+  const trail2 = [at(0, 5.5), at(N, 5.5)].map(([a, b]) => `${a},${b}`).join(' ')
+  out += `<g class="floor-trails"><polyline points="${trail}" pathLength="100"/><polyline points="${trail2}" pathLength="100" style="animation-delay:-3s"/></g>`
+  return out
+}
+
+/** Warm light pool on the snow in front of a light source. */
+const pool = (x: number, y: number, rx = 46, ry = 18, color = 'warm') => {
+  const [cx, cy] = at(x, y)
+  return `<ellipse class="pool" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#pool-${color})"/>`
+}
+
+// --- stalls --------------------------------------------------------------------
+
+const bulbs = (x: number, y: number, w: number, z: number, n: number) => {
+  let out = ''
+  for (let i = 0; i <= n; i++) {
+    const [a, b] = at(x + (i * w) / n, y, z - (i % 2))
+    out += `<rect class="bulb b${i % 4}" x="${a - 1}" y="${b - 1}" width="2" height="2"/>`
+  }
+  return out
+}
+
+const hangingSign = (x: number, y: number, z: number, icon: Grid, color: string) => {
+  const [cx, cy] = at(x, y, z)
+  const iw = Math.max(...icon.map((r) => r.length))
+  const ih = icon.length
+  const bw = iw + 6
+  const bh = ih + 6
+  const left = Math.round(cx - bw / 2)
+  const top = Math.round(cy - bh)
+  return `<g class="sign">
+    <rect x="${left + 2}" y="${top - 6}" width="1" height="6" fill="${WOOD_DEEP}"/>
+    <rect x="${left + bw - 3}" y="${top - 6}" width="1" height="6" fill="${WOOD_DEEP}"/>
+    <rect x="${left}" y="${top}" width="${bw}" height="${bh}" fill="#1b1028"/>
+    <rect x="${left + 1}" y="${top + 1}" width="${bw - 2}" height="${bh - 2}" fill="${color}"/>
+    <rect x="${left + 2}" y="${top + 2}" width="${bw - 4}" height="${bh - 4}" fill="#2a1f4f"/>
+    <g transform="translate(${left + 3} ${top + 3})">${rects(icon, PAL)}</g>
+  </g>`
+}
+
+/** Name tag that appears on hover / focus. */
+const nameTag = (x: number, y: number, z: number, name: string) => {
+  const [cx, cy] = at(x, y, z)
+  const w = textWidth(name) + 8
+  const left = Math.round(cx - w / 2)
+  const top = Math.round(cy - 13)
+  return `<g class="tag">
+    <rect x="${left}" y="${top}" width="${w}" height="11" fill="#1b1028"/>
+    <rect x="${left + 1}" y="${top + 1}" width="${w - 2}" height="9" fill="#fff4d6"/>
+    <rect x="${Math.round(cx) - 1}" y="${top + 11}" width="3" height="2" fill="#1b1028"/>
+    ${pixelText(name, left + 4, top + 3, '#1b1028')}
+  </g>`
+}
+
+interface StallOpts {
+  x: number
+  y: number
+  color: string
+  icon: Grid
+  name: string
+  href?: string
+  goods?: string[]
+  /** Which way the open side faces: +y (front-left) or +x (front-right). */
+  facing?: 'y' | 'x'
+  extra?: (x: number, y: number) => string
+}
+
+/**
+ * A 2×1 market stall. Drawn facing +y; a stall facing +x is the same drawing
+ * on swapped tile coordinates, mirrored around the room's centre line.
+ */
+const stall = ({ x: tx, y: ty, color, icon, name, href, goods = [color], facing = 'y', extra }: StallOpts) => {
+  const mirrored = facing === 'x'
+  const [x, y] = mirrored ? [ty, tx] : [tx, ty]
+  let g = ''
+  // back wall with warm lit interior
+  g += box(x, y, 2, 0.15, 0, 30, WOOD_DARK, 'url(#interior)', WOOD_DEEP)
+  // shelves with goods
+  for (const z of [12, 21]) {
+    const [a0, b0] = at(x + 0.1, y + 0.15, z)
+    const [a1, b1] = at(x + 1.9, y + 0.15, z)
+    g += `<polygon points="${a0},${b0} ${a1},${b1} ${a1},${b1 + 1.5} ${a0},${b0 + 1.5}" fill="${WOOD}"/>`
+    for (let i = 0; i < 5; i++) {
+      const [ga, gb] = at(x + 0.25 + i * 0.36, y + 0.15, z + 1)
+      g += `<rect x="${ga - 2}" y="${gb - 4}" width="4" height="4" fill="${goods[i % goods.length]}"/>`
+    }
+  }
+  // counter
+  g += box(x, y + 0.65, 2, 0.35, 0, 12, '#a06a3f', WOOD, WOOD_DARK)
+  // plank lines on the counter front
+  for (const z of [4, 8]) {
+    const [a0, b0] = at(x, y + 1, z)
+    const [a1, b1] = at(x + 2, y + 1, z)
+    g += `<line x1="${a0}" y1="${b0}" x2="${a1}" y2="${b1}" stroke="${WOOD_DARK}" stroke-width=".8"/>`
+  }
+  // goods on the counter
+  for (let i = 0; i < 3; i++)
+    g += box(x + 0.2 + i * 0.6, y + 0.72, 0.3, 0.22, 12, 15, goods[i % goods.length], '#1b1028', '#1b1028')
+  // posts
+  for (const [px, py] of [[x, y + 1], [x + 2, y + 1]] as const) {
+    const [a, b] = at(px, py, 12)
+    g += `<rect x="${a - 1}" y="${b - 20}" width="2" height="20" fill="${WOOD_DEEP}"/>`
+  }
+  // roof: awning, stripes, snow
+  g += box(x - 0.1, y - 0.05, 2.2, 1.2, 32, 39, color, color, color)
+  for (let i = 0; i < 4; i++) {
+    const a = x - 0.1 + i * 0.55 + 0.27
+    g += poly('rgba(255,255,255,.92)', at(a, y + 1.15, 32), at(a + 0.27, y + 1.15, 32), at(a + 0.27, y + 1.15, 39), at(a, y + 1.15, 39))
+  }
+  // scalloped edge
+  for (let i = 0; i < 8; i++) {
+    const [a, b] = at(x - 0.1 + i * 0.275 + 0.07, y + 1.15, 32)
+    g += `<rect x="${a - 1}" y="${b}" width="3" height="2" fill="${i % 2 ? '#fff' : color}"/>`
+  }
+  g += box(x - 0.1, y - 0.05, 2.2, 1.2, 39, 41, SNOW, SNOW_SIDE, '#aab6da')
+  g += bulbs(x, y + 1.15, 2, 30, 6)
+  g += hangingSign(x + 1, y + 0.55, 56, icon, color)
+  g += extra?.(x, y) ?? ''
+  if (mirrored) g = `<g transform="translate(${OX * 2} 0) scale(-1 1)">${g}</g>`
+
+  const [cx, cy] = mirrored ? [tx + 0.55, ty + 1] : [tx + 1, ty + 0.55]
+  const body = `<g class="stall-body">${g}</g>${nameTag(cx, cy, 76, name)}`
+  return href
+    ? `<a href="${href}" class="hotspot" style="--glow:${color}" aria-label="${name}"><title>${name}</title>${body}</a>`
+    : `<g class="hotspot static" style="--glow:${color}">${body}</g>`
+}
+
+// --- tree ------------------------------------------------------------------------
+
+const tree = (x: number, y: number) => {
+  const [cx, cy] = at(x, y)
+  let g = ''
+  // snow mound + trunk
+  g += `<ellipse cx="${cx}" cy="${cy}" rx="22" ry="9" fill="${SNOW_SIDE}"/>`
+  g += `<ellipse cx="${cx}" cy="${cy - 1}" rx="20" ry="7" fill="${SNOW}"/>`
+  g += `<rect x="${cx - 4}" y="${cy - 16}" width="8" height="14" fill="${WOOD_DARK}"/>`
+  // stepped pixel tiers
+  const tiers = [
+    [60, 30],
+    [48, 26],
+    [36, 22],
+    [24, 18],
+  ]
+  let base = cy - 14
+  const r = rng(11)
+  const lights: string[] = []
+  for (const [w, h] of tiers) {
+    for (let row = 0; row < h; row += 2) {
+      const rw = Math.max(2, Math.round((w * (h - row)) / h / 2) * 2)
+      const yy = base - row
+      g += `<rect x="${cx - rw / 2}" y="${yy - 2}" width="${rw / 2}" height="2" fill="#2f8a57"/>`
+      g += `<rect x="${cx}" y="${yy - 2}" width="${rw / 2}" height="2" fill="#1f6340"/>`
+      if (row % 6 === 2 && rw > 8) {
+        const lx = cx - rw / 2 + 2 + Math.floor(r() * (rw - 4))
+        lights.push(`<rect class="bulb b${lights.length % 4}" x="${lx}" y="${yy - 3}" width="3" height="3"/>`)
+      }
+    }
+    // snow on the tier edge
+    g += `<rect x="${cx - w / 2}" y="${base - 2}" width="${w}" height="2" fill="${SNOW}" opacity=".85"/>`
+    base -= h - 10
+  }
+  // garland
+  g += `<path d="M${cx - 24} ${cy - 30} Q${cx} ${cy - 22} ${cx + 22} ${cy - 40} M${cx - 16} ${cy - 54} Q${cx} ${cy - 46} ${cx + 15} ${cy - 62}" stroke="#ffcf6b" stroke-width="1.2" fill="none" stroke-dasharray="2 2" class="garland"/>`
+  g += lights.join('')
+  // star with halo
+  const sy = base - 8
+  g += `<circle cx="${cx}" cy="${sy}" r="20" fill="url(#halo)" class="star-halo"/>`
+  g += `<rect x="${cx - 1}" y="${sy - 7}" width="3" height="15" fill="#ffd23f"/><rect x="${cx - 7}" y="${sy - 1}" width="15" height="3" fill="#ffd23f"/>`
+  g += `<rect x="${cx - 3}" y="${sy - 3}" width="7" height="7" fill="#ffe680"/>`
+  return g
+}
+
+// --- café ------------------------------------------------------------------------
+
+const steam = (x: number, y: number, z: number) => {
+  const [a, b] = at(x, y, z)
+  return `<g class="steam">${[0, 1, 2]
+    .map((i) => `<rect x="${a - 1 + (i % 2) * 2}" y="${b - 4}" width="2" height="2" style="animation-delay:${i * 0.8}s"/>`)
+    .join('')}</g>`
+}
+
+const cafe = (x: number, y: number, facing: 'x' | 'y') => {
+  const extra = (sx: number, sy: number) => {
+    let out = ''
+    for (let i = 0; i < 3; i++) {
+      const cx = sx + 0.3 + i * 0.6
+      const [a, b] = at(cx, sy + 0.83, 15)
+      out += `<rect x="${a - 2}" y="${b - 4}" width="4" height="4" fill="#fff"/><rect x="${a + 2}" y="${b - 3}" width="1" height="2" fill="#fff"/>`
+      out += steam(cx, sy + 0.83, 19)
+    }
+    return out
+  }
+  return stall({ x, y, facing, color: '#6c1d7f', icon: CUP, name: 'Xebia Cafe', goods: ['#fff4d6', '#c98a00'], extra })
+}
+
+const CUP: Grid = [
+  '.k.k.k..',
+  'k.k.k...',
+  '........',
+  'kkkkkk..',
+  'kwwwwkkk',
+  'kwwwwk.k',
+  'kwwwwkkk',
+  'kwwwwk..',
+  '.kkkk...',
+]
+
+// --- LED sign --------------------------------------------------------------------
+
+const ledSign = (x: number, y: number, message: string) => {
+  const [cx, cy] = at(x, y)
+  const w = 132
+  const h = 15
+  const left = Math.round(cx - w / 2)
+  const top = Math.round(cy - 96)
+  const text = `${message}   *   `
+  const tw = textWidth(text) + 1
+  return `<g class="led">
+    <rect x="${left + 10}" y="${top + h}" width="3" height="${cy - top - h}" fill="#1b1028"/>
+    <rect x="${left + w - 13}" y="${top + h}" width="3" height="${cy - top - h}" fill="#1b1028"/>
+    <rect x="${left - 2}" y="${top - 2}" width="${w + 4}" height="${h + 4}" fill="#1b1028"/>
+    <rect x="${left}" y="${top}" width="${w}" height="${h}" fill="#140b26"/>
+    <rect x="${left - 2}" y="${top - 4}" width="${w + 4}" height="2" fill="${SNOW}"/>
+    <clipPath id="led-clip"><rect x="${left + 2}" y="${top}" width="${w - 4}" height="${h}"/></clipPath>
+    <g clip-path="url(#led-clip)"><g class="led-text" style="--tw:-${tw}px">
+      ${pixelText(text, left + 4, top + 5, '#ffb347')}${pixelText(text, left + 4 + tw, top + 5, '#ffb347')}
+    </g></g>
+  </g>`
+}
+
+// --- people ----------------------------------------------------------------------
+
+const person = (x: number, y: number, shirt: string, hair: string, cls: string, flip = false) => {
+  const [a, b] = at(x, y)
+  const body = rects(AVATAR, { ...PAL, t: shirt, h: hair })
+  return `<g class="walker ${cls}"><g transform="translate(${a - 7} ${b - 29}) scale(1.5)${flip ? ' translate(10 0) scale(-1 1)' : ''}">${body}</g></g>`
+}
+
+const lamp = (x: number, y: number) => {
+  const [a, b] = at(x, y)
+  return `<rect x="${a - 1}" y="${b - 46}" width="2" height="46" fill="#1b1028"/>
+    <rect x="${a - 4}" y="${b - 54}" width="8" height="8" fill="#1b1028"/>
+    <rect x="${a - 3}" y="${b - 53}" width="6" height="6" fill="#ffcf6b" class="lamp-light"/>
+    <circle cx="${a}" cy="${b - 50}" r="16" fill="url(#halo)"/>`
+}
+
+// --- composition -----------------------------------------------------------------
+
+const DEFS = `<defs>
+  <radialGradient id="pool-warm"><stop offset="0" stop-color="#ffcf6b" stop-opacity=".55"/><stop offset="1" stop-color="#ffcf6b" stop-opacity="0"/></radialGradient>
+  <radialGradient id="halo"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".7"/><stop offset=".4" stop-color="#ffcf6b" stop-opacity=".25"/><stop offset="1" stop-color="#ffcf6b" stop-opacity="0"/></radialGradient>
+  <linearGradient id="interior" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb347"/><stop offset="1" stop-color="#8a4a1c"/></linearGradient>
+</defs>`
+
+export interface VillageOpts {
+  /** Make the supplier stalls clickable links into the market. */
+  interactive?: boolean
+}
+
+// Stalls line the two back edges of the square like furniture along Habbo
+// room walls, leaving the middle and front open for the tree and people.
+const STALL_SPOTS: Array<{ x: number; y: number; facing: 'x' | 'y' }> = [
+  { x: 2.2, y: 0.4, facing: 'y' },
+  { x: 0.4, y: 2.2, facing: 'x' },
+  { x: 5.6, y: 0.4, facing: 'y' },
+  { x: 0.4, y: 5.6, facing: 'x' },
+]
+
+/** Light pool in front of a stall's open side. */
+const stallPool = (x: number, y: number, facing: 'x' | 'y', rx = 40, ry = 16) =>
+  facing === 'y' ? pool(x + 1, y + 1.7, rx, ry) : pool(x + 1.7, y + 1, rx, ry)
+
+export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
+  const items: Item[] = []
+  const pools: string[] = []
+
+  suppliers.slice(0, STALL_SPOTS.length).forEach((s, i) => {
+    const { x, y, facing } = STALL_SPOTS[i]
+    pools.push(stallPool(x, y, facing))
+    items.push({
+      depth: x + y + 2,
+      svg: stall({
+        x,
+        y,
+        facing,
+        color: s.color,
+        icon: productFor[s.id],
+        name: s.name,
+        href: interactive ? `#/stall/${s.id}` : undefined,
+      }),
+    })
+  })
+
+  // the giving booth: in the market it leads to the charities
+  pools.push(stallPool(9, 0.4, 'y'))
+  items.push({
+    depth: 11.4,
+    svg: stall({
+      x: 9,
+      y: 0.4,
+      color: '#e5007d',
+      icon: productFor[charities[0]?.id] ?? productFor['free-a-girl'],
+      name: 'Giving booth',
+      href: interactive ? '#/donate' : undefined,
+      goods: ['#e5007d', '#ffd23f'],
+    }),
+  })
+
+  pools.push(stallPool(0.4, 9, 'x'))
+  items.push({ depth: 11.4, svg: cafe(0.4, 9, 'x') })
+
+  pools.push(pool(6.5, 6.5, 64, 28))
+  items.push({ depth: 13, svg: tree(6.5, 6.5) })
+  items.push({ depth: 1, svg: ledSign(0.9, 0.9, 'XEBIA CHRISTMAS MARKET   *   ONE GIFT EACH   *   2026') })
+  items.push({ depth: 13.2, svg: lamp(3.4, 9.8) })
+  items.push({ depth: 13.2, svg: lamp(9.8, 3.4) })
+  pools.push(pool(3.4, 9.8, 24, 10), pool(9.8, 3.4, 24, 10))
+
+  items.push({ depth: 9.6, svg: person(5.4, 4.2, '#6c1d7f', '#3b2416', 'w1') })
+  items.push({ depth: 12.6, svg: person(4.2, 8.4, '#c8102e', '#e8c170', 'w2', true) })
+  items.push({ depth: 17.6, svg: person(8.2, 9.4, '#2b6cb0', '#1b1028', 'w3') })
+  items.push({ depth: 13.8, svg: person(9.6, 4.2, '#e5007d', '#7a3b12', 'w4', true) })
+
+  items.sort((a, b) => a.depth - b.depth)
+  return `<svg class="village ${interactive ? 'is-interactive' : ''}" viewBox="0 0 ${VILLAGE_W} ${VILLAGE_H}" shape-rendering="crispEdges" role="${interactive ? 'group' : 'img'}" aria-label="Pixel-art Christmas market square">
+    ${DEFS}${floor()}<g class="pools">${pools.join('')}</g>${items.map((i) => i.svg).join('')}
+  </svg>`
+}
