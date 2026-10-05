@@ -92,6 +92,95 @@ const pool = (x: number, y: number, rx = 46, ry = 18, color = 'warm') => {
   return `<ellipse class="pool pool-${color}" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#pool-${color})"/>`
 }
 
+// --- shopkeepers ------------------------------------------------------------------
+
+type Job = 'slice' | 'pour' | 'stir' | 'pack' | 'wave' | 'wipe'
+
+const JOBS: Record<string, Job> = { alexanderhoeve: 'slice', 'weldam-wijn': 'pour', 'olala-chocola': 'stir', oldenhof: 'pack' }
+
+const LOOKS: Record<Job, { shirt: string; hair: string }> = {
+  slice: { shirt: '#2e7d4f', hair: '#e8c170' },
+  pour: { shirt: '#5e0f2e', hair: '#1b1028' },
+  stir: { shirt: '#7b4a2d', hair: '#3b2416' },
+  pack: { shirt: '#2b6cb0', hair: '#7a3b12' },
+  wave: { shirt: '#e5007d', hair: '#3b2416' },
+  wipe: { shirt: '#6c1d7f', hair: '#e8c170' },
+}
+
+// the avatar with an apron (the white shirt dots become its straps)
+const KEEPER: Grid = AVATAR.map((row, y) => (y >= 9 && y <= 12 ? row.slice(0, 3) + 'aaaa' + row.slice(7) : row))
+
+const px = (x: number, y: number, w: number, h: number, fill: string) =>
+  `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`
+
+/** Two-frame loop, swapped in CSS. */
+const frames = (a: string, b: string, speed: number) =>
+  `<g class="kf ka" style="--kf:${speed}s">${a}</g><g class="kf kb" style="--kf:${speed}s">${b}</g>`
+
+const heart = (x: number, y: number, delay: number) =>
+  `<g class="heart" style="animation-delay:${delay}s">${px(x, y, 1, 1, '#e5007d')}${px(x + 2, y, 1, 1, '#e5007d')}${px(x, y + 1, 3, 1, '#e5007d')}${px(x + 1, y + 2, 1, 1, '#e5007d')}</g>`
+
+/** Props per job; a is the keeper's centre, c the counter top. */
+const PROPS: Record<Job, (a: number, c: number) => string> = {
+  slice: (a, c) =>
+    px(a - 9, c - 4, 8, 4, '#ffd23f') +
+    px(a - 9, c - 1, 8, 1, '#c98a00') +
+    frames(
+      px(a + 2, c - 13, 1, 2, WOOD_DEEP) + px(a + 2, c - 11, 1, 6, '#d6dbe8'),
+      px(a + 2, c - 8, 1, 2, WOOD_DEEP) + px(a + 2, c - 6, 1, 6, '#d6dbe8') + px(a + 4, c - 3, 3, 3, '#ffd23f'),
+      0.7,
+    ),
+  pour: (a, c) =>
+    px(a + 4, c - 2, 1, 2, '#bfe3ff') +
+    px(a + 3, c, 3, 1, '#bfe3ff') +
+    frames(
+      px(a + 3, c - 5, 3, 3, '#bfe3ff') + px(a - 6, c - 9, 3, 8, '#5e0f2e') + px(a - 5, c - 11, 1, 2, '#5e0f2e'),
+      px(a + 3, c - 5, 3, 3, '#8e1e46') +
+        px(a - 2, c - 10, 3, 3, '#5e0f2e') +
+        px(a + 1, c - 11, 2, 2, '#5e0f2e') +
+        px(a + 3, c - 12, 1, 1, '#5e0f2e') +
+        px(a + 4, c - 10, 1, 5, '#8e1e46'),
+      1.6,
+    ),
+  stir: (a, c) =>
+    px(a - 4, c - 4, 8, 4, '#544b70') +
+    px(a - 5, c - 5, 10, 1, '#6b6286') +
+    px(a - 3, c - 5, 6, 1, '#7b4a2d') +
+    frames(px(a - 2, c - 11, 1, 6, WOOD), px(a + 1, c - 11, 1, 6, WOOD), 0.6) +
+    `<g class="steam">${[0, 1].map((i) => `<rect x="${a - 1 + i * 2}" y="${c - 9}" width="2" height="2" style="animation-delay:${i * 1.1}s"/>`).join('')}</g>`,
+  pack: (a, c) =>
+    px(a + 1, c - 4, 7, 4, '#a06a3f') +
+    px(a + 1, c - 3, 7, 1, WOOD) +
+    px(a + 2, c - 8, 5, 1, WOOD) +
+    px(a + 2, c - 7, 1, 3, WOOD) +
+    px(a + 6, c - 7, 1, 3, WOOD) +
+    frames(
+      px(a - 7, c - 7, 2, 2, '#c8102e') + px(a - 4, c - 5, 3, 2, '#c98a00'),
+      px(a + 3, c - 6, 2, 2, '#c8102e') + px(a + 5, c - 5, 3, 1, '#c98a00'),
+      1.2,
+    ),
+  wave: (a, c) =>
+    frames(
+      px(a - 8, c - 18, 1, 6, LOOKS.wave.shirt) + px(a - 9, c - 21, 2, 3, '#f5c7a1'),
+      px(a - 10, c - 16, 2, 2, LOOKS.wave.shirt) + px(a - 12, c - 19, 2, 3, '#f5c7a1'),
+      0.5,
+    ) + [0, 1, 2].map((i) => heart(a + 4 + i * 2, c - 16, i)).join(''),
+  wipe: (a, c) => frames(px(a - 6, c - 1, 4, 1, '#fff'), px(a - 1, c - 1, 4, 1, '#fff'), 0.9),
+}
+
+/** Shopkeeper behind the counter (drawn before it) plus the props of their job (drawn after it). */
+const keeper = (job: Job, x: number, y: number) => {
+  // right behind the counter: further back and the awning hides the head
+  const [a, b] = at(x + 1, y + 0.6).map(Math.round)
+  const c = Math.round(at(x + 1, y + 0.82, 12)[1])
+  const { shirt, hair } = LOOKS[job]
+  const sprite = rects(KEEPER, { ...PAL, t: shirt, h: hair, a: '#fff4e6' })
+  return {
+    body: `<g class="person keeper"><g class="dancer" style="transform-origin:${a}px ${b}px"><g transform="translate(${a - 6} ${b - 25}) scale(1.25)">${sprite}</g></g></g>`,
+    props: PROPS[job](a, c),
+  }
+}
+
 // --- stalls --------------------------------------------------------------------
 
 const bulbs = (x: number, y: number, w: number, z: number, n: number) => {
@@ -146,13 +235,15 @@ interface StallOpts {
   /** Which way the open side faces: +y (front-left) or +x (front-right). */
   facing?: 'y' | 'x'
   extra?: (x: number, y: number) => string
+  /** Shopkeeper standing behind the counter, doing their job. */
+  keeper?: Job
 }
 
 /**
  * A 2×1 market stall. Drawn facing +y; a stall facing +x is the same drawing
  * on swapped tile coordinates, mirrored around the room's centre line.
  */
-const stall = ({ x: tx, y: ty, color, icon, name, href, goods = [color], facing = 'y', extra }: StallOpts) => {
+const stall = ({ x: tx, y: ty, color, icon, name, href, goods = [color], facing = 'y', extra, keeper: job }: StallOpts) => {
   const mirrored = facing === 'x'
   const [x, y] = mirrored ? [ty, tx] : [tx, ty]
   let g = ''
@@ -168,6 +259,8 @@ const stall = ({ x: tx, y: ty, color, icon, name, href, goods = [color], facing 
       g += `<rect x="${ga - 2}" y="${gb - 4}" width="4" height="4" fill="${goods[i % goods.length]}"/>`
     }
   }
+  const kept = job ? keeper(job, x, y) : undefined
+  g += kept?.body ?? ''
   // counter
   g += box(x, y + 0.65, 2, 0.35, 0, 12, '#a06a3f', WOOD, WOOD_DARK)
   // plank lines on the counter front
@@ -176,9 +269,11 @@ const stall = ({ x: tx, y: ty, color, icon, name, href, goods = [color], facing 
     const [a1, b1] = at(x + 2, y + 1, z)
     g += `<line x1="${a0}" y1="${b0}" x2="${a1}" y2="${b1}" stroke="${WOOD_DARK}" stroke-width=".8"/>`
   }
-  // goods on the counter
-  for (let i = 0; i < 3; i++)
-    g += box(x + 0.2 + i * 0.6, y + 0.72, 0.3, 0.22, 12, 15, goods[i % goods.length], '#1b1028', '#1b1028')
+  // goods on the counter, unless a shopkeeper is working there
+  if (!job)
+    for (let i = 0; i < 3; i++)
+      g += box(x + 0.2 + i * 0.6, y + 0.72, 0.3, 0.22, 12, 15, goods[i % goods.length], '#1b1028', '#1b1028')
+  g += kept?.props ?? ''
   // posts
   for (const [px, py] of [[x, y + 1], [x + 2, y + 1]] as const) {
     const [a, b] = at(px, py, 12)
@@ -273,7 +368,7 @@ const cafe = (x: number, y: number, facing: 'x' | 'y') => {
     }
     return out
   }
-  return stall({ x, y, facing, color: '#6c1d7f', icon: CUP, name: 'Xebia Cafe', goods: ['#fff4d6', '#c98a00'], extra })
+  return stall({ x, y, facing, color: '#6c1d7f', icon: CUP, name: 'Xebia Cafe', goods: ['#fff4d6', '#c98a00'], extra, keeper: 'wipe' })
 }
 
 const CUP: Grid = [
@@ -422,6 +517,21 @@ const drift = (x: number, y: number, w = 22) => {
   return out
 }
 
+// --- dog -------------------------------------------------------------------------
+
+const DOG: Grid = ['........bb..', 'b......bbkb.', '.b.....brbbk', '.bbbbbbbbb..', '.bbbbbbbbb..']
+const DOG_LEGS_A = ['.b.b...b.b..', '.b.b...b.b..']
+const DOG_LEGS_B = ['..bb....bb..', '..bb....bb..']
+const DOG_PAL = { b: '#c98a5a', k: '#1b1028', r: '#c8102e' }
+const flipGrid = (g: Grid) => g.map((row) => [...row].reverse().join(''))
+
+/** A dog trotting down the path and back; the run itself is CSS. */
+const dog = (x: number, y: number) => {
+  const [a, b] = at(x, y).map(Math.round)
+  const pose = (legs: Grid, flip: boolean) => rects(flip ? flipGrid([...DOG, ...legs]) : [...DOG, ...legs], DOG_PAL, a - 6, b - 7)
+  return `<g class="dog"><g class="dog-l">${frames(pose(DOG_LEGS_A, true), pose(DOG_LEGS_B, true), 0.3)}</g><g class="dog-r">${frames(pose(DOG_LEGS_A, false), pose(DOG_LEGS_B, false), 0.3)}</g></g>`
+}
+
 // --- composition -----------------------------------------------------------------
 
 const DEFS = `<defs>
@@ -465,6 +575,7 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
         facing,
         color: s.color,
         icon: productFor[s.id],
+        keeper: JOBS[s.id],
         name: s.name,
         href: interactive ? `#/stall/${s.id}` : undefined,
       }),
@@ -481,6 +592,7 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
       color: '#e5007d',
       icon: productFor[charities[0]?.id] ?? productFor['free-a-girl'],
       name: 'Giving booth',
+      keeper: 'wave',
       href: interactive ? '#/donate' : undefined,
       goods: ['#e5007d', '#ffd23f'],
     }),
@@ -505,6 +617,12 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
   items.push({ depth: 17.1, svg: person(9.1, 7.9, '#2e7d4f', '#e8c170', 'warm', true) })
   items.push({ depth: 20.4, svg: bench(8.4, 10.4, 1.6, 0.35) })
   items.push({ depth: 20.4, svg: bench(10.4, 8.4, 0.35, 1.6) })
+
+  // shoppers browsing and a dog on the path
+  // (beside the stalls: in front of a counter they'd hide the shopkeeper)
+  items.push({ depth: 6, svg: person(4.5, 1.5, '#ffd23f', '#1b1028', 'shopper') })
+  items.push({ depth: 9.9, svg: person(8.3, 1.6, '#2e7d4f', '#7a3b12', 'shopper', true) })
+  items.push({ depth: 15.6, svg: dog(5.6, 8) })
 
   items.push({ depth: 19.7, svg: snowman(11.4, 8.3) })
   for (const [x, y, w] of [[11.4, 2.4, 22], [2.4, 11.4, 22], [0.8, 8.3, 16], [8.3, 0.8, 16], [11.3, 11.2, 26]] as const)

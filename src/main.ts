@@ -83,6 +83,9 @@ const render = (animate = true) => {
     document.body.dataset.page = name
     app.innerHTML = view([page, id])
     if (focusSel) app.querySelector<HTMLElement>(focusSel)?.focus({ preventScroll: true })
+    // on phones the market square is wider than the screen: start on the tree
+    const map = app.querySelector<HTMLElement>('.market-map')
+    if (map) map.scrollLeft = (map.scrollWidth - map.clientWidth) / 2
     const fresh = key !== rendered
     rendered = key
     if (fresh) scrollToTarget(page)

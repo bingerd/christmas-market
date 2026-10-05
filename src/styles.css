@@ -723,6 +723,69 @@ main {
     transform: translate(4px, -26px);
   }
 }
+.village .kf.ka {
+  animation: flame var(--kf) steps(1) infinite;
+}
+.village .kf.kb {
+  opacity: 0;
+  animation: flame-b var(--kf) steps(1) infinite;
+}
+.village .heart {
+  opacity: 0;
+  animation: spark 3s ease-out infinite;
+}
+.village .shopper .dancer {
+  animation: browse 2.6s steps(2) infinite;
+}
+@keyframes browse {
+  50% {
+    transform: translateY(-1px);
+  }
+}
+/* down the path, a short sniff, then back up */
+.village .dog {
+  animation: dog-run 14s steps(48) infinite;
+}
+.village .dog-r {
+  opacity: 0;
+}
+.village .dog-l,
+.village .dog-r {
+  animation: dog-face 14s steps(1) infinite;
+}
+.village .dog-r {
+  animation-name: dog-face-r;
+}
+@keyframes dog-run {
+  0%,
+  6% {
+    transform: translate(0, 0);
+  }
+  44%,
+  56% {
+    transform: translate(-48px, 24px);
+  }
+  94%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
+@keyframes dog-face {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes dog-face-r {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 .village .floor-trails polyline {
   fill: none;
   stroke: var(--cyan);
@@ -902,7 +965,26 @@ main {
   transition:
     transform 0.8s var(--ease),
     filter 0.8s var(--ease);
-  filter: brightness(0.85);
+  filter: brightness(0.92);
+}
+/* the little scenes on the two cards: one slow movement each */
+.gate-scene .ga-glow {
+  animation: breathe 4s ease-in-out infinite alternate;
+}
+.gate-scene .ga-coin {
+  opacity: 0;
+  animation: ga-coin 4.5s ease-in infinite;
+}
+@keyframes ga-coin {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  20%,
+  100% {
+    opacity: 0;
+    transform: translateY(9px);
+  }
 }
 .gate:hover .gate-art svg {
   transform: scale(1.04);
@@ -946,6 +1028,34 @@ main {
   display: block;
   width: 100%;
   height: auto;
+}
+.swipe-hint {
+  display: none;
+}
+/* phones: the square at a size where you can see the people, swipe to look around */
+@media (max-width: 720px) {
+  .market-map {
+    margin: 8px calc(-1 * clamp(16px, 4vw, 48px)) 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .market-map::-webkit-scrollbar {
+    display: none;
+  }
+  .market-map svg {
+    width: 190vw;
+    max-width: none;
+  }
+  .swipe-hint {
+    display: block;
+    margin: 4px 0 20px;
+    text-align: center;
+    font-family: var(--font-label);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+  }
 }
 .stall-index {
   display: grid;

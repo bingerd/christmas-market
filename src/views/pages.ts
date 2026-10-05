@@ -2,8 +2,9 @@ import { charities, suppliers } from '../catalog.ts'
 import { FORM_URL, LOCATIONS, SERVICE_LINES } from '../config.ts'
 import { sprite } from '../pixel.ts'
 import { type Pick, type Resolved, label, needsDelivery, resolve } from '../pick.ts'
+import { givingScene, marketScene } from '../scene/gates.ts'
 import { villageSvg } from '../scene/village.ts'
-import { BASKET, HEART, PAL, productFor, stallSvg } from '../sprites.ts'
+import { PAL, productFor } from '../sprites.ts'
 import type { State } from '../state.ts'
 import { esc, panel, photo, steps } from './ui.ts'
 
@@ -31,14 +32,14 @@ export const home = () => `
     </header>
     <div class="gates">
       <a class="gate" href="#/market" style="--glow:#ffb347">
-        <span class="gate-art" aria-hidden="true">${stallSvg('#f2c94c', BASKET, 4)}</span>
+        <span class="gate-art" aria-hidden="true">${marketScene()}</span>
         <span class="gate-label">The market</span>
         <strong>Choose a present</strong>
         <span class="gate-text">Visit ${suppliers.length} local makers and pick the package you like best. We'll deliver it to your office.</span>
         <span class="gate-go">Walk in →</span>
       </a>
       <a class="gate" href="#/donate" style="--glow:#e5007d">
-        <span class="gate-art" aria-hidden="true">${stallSvg('#e5007d', HEART, 9)}</span>
+        <span class="gate-art" aria-hidden="true">${givingScene()}</span>
         <span class="gate-label">The giving booth</span>
         <strong>Donate your gift</strong>
         <span class="gate-text">Give the value of your present to one of ${charities.length} charities instead.</span>
@@ -55,10 +56,11 @@ export const market = (state: State) => `
     <header class="section-head">
       <p class="eyebrow">The market square</p>
       <h1 id="market-title">Step up to a stall</h1>
-      <p class="section-lead">Hover a stall to light it up, click to see what's on offer. You can pick one present.</p>
-      <p class="square-hint">Psst… click the square itself for a little dance (sound on).</p>
+      <p class="section-lead">Step up to a stall to see what's on offer. You can pick one present.</p>
+      <p class="square-hint">Psst… tap the square itself for a little dance (sound on).</p>
     </header>
     <div class="market-map layer" style="--depth:6">${villageSvg({ interactive: true })}</div>
+    <p class="swipe-hint" aria-hidden="true">← Swipe to look around →</p>
     <nav class="stall-index" aria-label="All stalls">
       ${suppliers
         .map(
