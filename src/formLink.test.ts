@@ -16,24 +16,25 @@ describe('buildFormUrl', () => {
       buildFormUrl(config, { serviceLine: 'Xebia Data', location: 'Hilversum' }, { kind: 'present', id: 'weldam-wijn-2' }),
     )
     expect(p.get('id')).toBe('ABC')
-    expect(p.get('r1')).toBe('Present')
+    expect(p.get('r1')).toBe('"Present"')
     expect(p.get('r2')).toBe('Weldam Wijn – Red & white duo')
-    expect(p.get('r3')).toBe('Xebia Data')
-    expect(p.get('r4')).toBe('Hilversum')
+    expect(p.get('r3')).toBe('"Xebia Data"')
+    expect(p.get('r4')).toBe('"Hilversum"')
   })
 
   it('uses the no-delivery label for donations', () => {
     const p = params(
       buildFormUrl(config, { serviceLine: 'Xebia Cloud', location: 'Eindhoven' }, { kind: 'donate', id: 'free-a-girl' }),
     )
-    expect(p.get('r1')).toBe('Donation')
+    expect(p.get('r1')).toBe('"Donation"')
     expect(p.get('r2')).toBe('Donation to Free a Girl')
-    expect(p.get('r4')).toBe('n/a')
+    expect(p.get('r4')).toBe('"n/a"')
   })
 
   it('encodes special characters and refuses invalid picks', () => {
     const url = buildFormUrl(config, { serviceLine: 'A & B', location: '' }, { kind: 'donate', id: 'free-a-girl' })
-    expect(url).toContain('r3=A+%26+B')
+    expect(url).toContain('r3=%22A%20%26%20B%22')
+    expect(url).not.toContain('+')
     expect(buildFormUrl(config, { serviceLine: '', location: '' }, null)).toBeNull()
   })
 })

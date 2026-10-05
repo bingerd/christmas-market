@@ -12,15 +12,21 @@ export interface Details {
   location: string
 }
 
-/** Build a Microsoft Forms pre-filled response URL, or null if the pick is invalid. */
+/**
+ * Build a Microsoft Forms pre-filled response URL, or null if the pick is invalid.
+ * Forms expects choice answers wrapped in double quotes and text answers bare,
+ * with spaces as %20 (not the `+` URLSearchParams would write).
+ */
 export const buildFormUrl = (config: FormConfig, details: Details, pick: Pick | null): string | null => {
   const resolved = resolve(pick)
   if (!resolved) return null
-  const url = new URL(config.url)
-  const set = (field: string, value: string) => url.searchParams.set(field, value)
-  set(config.fields.type, config.typeLabels[resolved.kind])
-  set(config.fields.choice, label(resolved))
-  set(config.fields.serviceLine, details.serviceLine)
-  set(config.fields.location, resolved.kind === 'present' ? details.location : config.noDeliveryLabel)
-  return url.toString()
+  const quoted = (value: string) => `"${value}"`
+  const answers: [string, string][] = [
+    [config.fields.type, quoted(config.typeLabels[resolved.kind])],
+    [config.fields.choice, label(resolved)],
+    [config.fields.serviceLine, quoted(details.serviceLine)],
+    [config.fields.location, quoted(resolved.kind === 'present' ? details.location : config.noDeliveryLabel)],
+  ]
+  const query = answers.map(([field, value]) => `&${field}=${encodeURIComponent(value)}`).join('')
+  return config.url + query
 }
