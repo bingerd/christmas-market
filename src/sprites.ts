@@ -112,6 +112,22 @@ export const HOUSE: Grid = [
 ]
 
 /** Habbo-ish avatar, 10x20. `t` is the shirt colour. */
+// Sits on the top-right arm of the Xebia X in the header.
+export const SANTA_HAT: Grid = [
+  '.....kkkk......',
+  '....krrrrkkk...',
+  '...krrrrrrrRk..',
+  '...krrrrrkkRRk.',
+  '..krrrrrRk.kwwk',
+  '..krrrrrRk.kwsk',
+  '.krrrrrrRk..kk.',
+  '.krrrrrrRk.....',
+  'kwwwwwwwwwwk...',
+  'kwswwswwswwk...',
+  'kSSSSSSSSSSk...',
+  '.kkkkkkkkkk....',
+]
+
 export const AVATAR: Grid = [
   '..hhhhhh..',
   '.hhhhhhhh.',

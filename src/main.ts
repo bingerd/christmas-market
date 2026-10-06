@@ -6,6 +6,8 @@ import { installParallax } from './scene/parallax.ts'
 import { santaSvg } from './scene/santa.ts'
 import { installDance } from './scene/village.ts'
 import { skylineSvg, starsSvg } from './scene/skyline.ts'
+import { PAL, SANTA_HAT } from './sprites.ts'
+import { sprite } from './pixel.ts'
 import { type State, load, reset, save } from './state.ts'
 import * as pages from './views/pages.ts'
 import { installPhotoPixelator } from './views/ui.ts'
@@ -15,6 +17,7 @@ const pill = document.querySelector<HTMLElement>('#pick-pill')!
 document.querySelector('#sky-stars')!.innerHTML = starsSvg()
 document.querySelector('#sky-line')!.innerHTML = skylineSvg()
 document.querySelector('#sky-santa .sleigh')!.innerHTML = santaSvg()
+document.querySelector('.santa-hat')!.innerHTML = sprite(SANTA_HAT, PAL)
 
 let state: State = load()
 let rendered = ''

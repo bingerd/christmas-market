@@ -629,10 +629,32 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
     items.push({ depth: x + y, svg: drift(x, y, w) })
   items.push({ depth: 13.8, svg: person(9.6, 4.2, '#e5007d', '#7a3b12', 'walker w4', true) })
 
+  // fireworks either side of the LED sign (kept off the left edge, which
+  // sits behind the hero headline on desktop)
+  const sky = [
+    firework(96, 36, '#ffd23f', 0),
+    firework(360, 28, '#ff7ab8', 1.4),
+    firework(116, 92, '#7fe7ff', 2.9),
+    firework(372, 100, '#2fd27a', 4.1),
+    firework(384, 52, '#ff8a2a', 5.6),
+    firework(312, 62, '#e5007d', 6.8),
+  ].join('')
+
   items.sort((a, b) => a.depth - b.depth)
   return `<svg class="village ${interactive ? 'is-interactive' : ''}" viewBox="0 0 ${VILLAGE_W} ${VILLAGE_H}" shape-rendering="crispEdges" role="${interactive ? 'group' : 'img'}" aria-label="Pixel-art Christmas market square">
-    ${DEFS}${floor()}<g class="pools">${pools.join('')}</g>${items.map((i) => i.svg).join('')}
+    ${DEFS}<g class="sky">${sky}</g>${floor()}<g class="pools">${pools.join('')}</g>${items.map((i) => i.svg).join('')}
   </svg>`
+}
+
+/** A firework burst: rings of pixels that open and fade (timing in CSS). */
+const firework = (cx: number, cy: number, color: string, delay: number) => {
+  let dots = ''
+  for (let i = 0; i < 16; i++) {
+    const t = (i / 16) * Math.PI * 2
+    for (const [rad, size] of [[8, 2], [15, 2], [21, 1]] as const)
+      dots += `<rect x="${Math.round(cx + Math.cos(t) * rad)}" y="${Math.round(cy + Math.sin(t) * rad)}" width="${size}" height="${size}"/>`
+  }
+  return `<g class="firework" fill="${color}" style="transform-origin:${cx}px ${cy}px;animation-delay:${delay}s">${dots}<rect x="${cx - 1}" y="${cy - 1}" width="3" height="3" fill="#fff"/></g>`
 }
 
 /**

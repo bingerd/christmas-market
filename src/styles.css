@@ -308,17 +308,37 @@ body:not([data-page='home']) #sky-line {
 }
 .brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
   text-decoration: none;
 }
-.brand-mark {
-  font-family: var(--font-pixel);
-  font-weight: 700;
-  font-size: 26px;
-  letter-spacing: -0.02em;
-  color: #fff;
-  text-shadow: 0 0 18px rgb(162 75 208 / 0.8);
+/* The official logo in its white variant (same paths, recoloured only),
+   with a soft violet glow so it belongs to the night sky. */
+.brand-logo {
+  position: relative;
+  display: block;
+  filter: drop-shadow(0 0 10px rgb(162 75 208 / 0.7));
+}
+.brand-logo img {
+  display: block;
+  width: auto;
+  height: 24px;
+}
+.santa-hat {
+  position: absolute;
+  /* centred on the tip of the X's top-right arm */
+  left: 17px;
+  top: -15px;
+  width: 26px;
+  transform: rotate(14deg);
+  transform-origin: 30% 100%;
+  pointer-events: none;
+}
+.santa-hat svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.35));
 }
 .brand-sub {
   font-family: var(--font-label);
@@ -648,6 +668,29 @@ main {
 .village .b3 {
   fill: var(--amber);
   animation-delay: 1.35s;
+}
+/* Hidden by default so reduced motion simply shows no fireworks. */
+.village .firework {
+  opacity: 0;
+  animation: firework 8.4s steps(8) infinite;
+}
+@keyframes firework {
+  0% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+  3% {
+    opacity: 1;
+  }
+  14% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  24%,
+  100% {
+    opacity: 0;
+    transform: scale(1.12) translateY(4px);
+  }
 }
 .village .pool {
   animation: breathe 5s ease-in-out infinite alternate;
@@ -1257,6 +1300,20 @@ main {
 .pick-thumb {
   flex: none;
   width: clamp(64px, 18vw, 96px);
+}
+/* Smallest phones: let "Change" drop to its own row so the name isn't squeezed. */
+@media (max-width: 359px) {
+  .pick-summary {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  .pick-summary strong {
+    font-size: 18px;
+  }
+  .pick-summary > .link {
+    flex-basis: 100%;
+    text-align: right;
+  }
 }
 fieldset {
   margin: 0 0 24px;
