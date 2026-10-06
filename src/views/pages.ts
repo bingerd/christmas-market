@@ -18,7 +18,7 @@ export const home = () => `
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero-village layer" style="--depth:18">${villageSvg()}</div>
     <div class="hero-copy">
-      <p class="eyebrow">Xebia · Winter 2026</p>
+      <p class="eyebrow">Winter 2026</p>
       <h1 id="hero-title">Welcome to the <em>Xebia Christmas Market</em></h1>
       <p class="hero-lead">Wander past the stalls of local makers. Pick one gift for yourself, or give it to a good cause.</p>
       <a class="btn btn-primary" href="#/choose">Enter the market</a>
