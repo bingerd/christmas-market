@@ -10,7 +10,7 @@ import { PAL, SANTA_HAT } from './sprites.ts'
 import { sprite } from './pixel.ts'
 import { type State, load, reset, save } from './state.ts'
 import * as pages from './views/pages.ts'
-import { installPhotoPixelator } from './views/ui.ts'
+import { sizePhotos } from './views/ui.ts'
 
 const app = document.querySelector<HTMLElement>('#app')!
 const pill = document.querySelector<HTMLElement>('#pick-pill')!
@@ -85,6 +85,7 @@ const render = (animate = true) => {
     const focusSel = key === rendered && active?.dataset.action ? `[data-action="${active.dataset.action}"][data-id="${active.dataset.id}"]` : null
     document.body.dataset.page = name
     app.innerHTML = view([page, id])
+    sizePhotos(app)
     if (focusSel) app.querySelector<HTMLElement>(focusSel)?.focus({ preventScroll: true })
     // on phones the market square is wider than the screen: start on the tree
     const map = app.querySelector<HTMLElement>('.market-map')
@@ -95,7 +96,12 @@ const render = (animate = true) => {
   }
 
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches
-  if (animate && !calm && key !== rendered && document.startViewTransition) document.startViewTransition(swap)
+  if (animate && !calm && key !== rendered && document.startViewTransition)
+    // the old screen dissolves (CSS) while the new page rises into place
+    document.startViewTransition(() => {
+      swap()
+      app.animate({ opacity: [0, 1], translate: ['0 14px', '0 0'] }, { duration: 500, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)' })
+    })
   else swap()
 }
 
@@ -145,8 +151,12 @@ app.addEventListener('submit', (e) => {
   location.hash = '#/review'
 })
 
-installPhotoPixelator(app)
-installParallax(document.documentElement)
+installParallax()
+let resizing = 0
+addEventListener('resize', () => {
+  cancelAnimationFrame(resizing)
+  resizing = requestAnimationFrame(() => sizePhotos(app))
+})
 installDance(app)
 window.addEventListener('hashchange', () => render())
 render(false)

@@ -1,6 +1,7 @@
-// Mouse-reactive parallax: sets --mx / --my (-1…1) on the root; layers move
-// by their own --depth in CSS. Off for touch and reduced motion.
-export const installParallax = (root: HTMLElement) => {
+// Mouse-reactive parallax: every .layer shifts by its own --depth. The offset is
+// written onto the layers themselves, not as a variable on the root, so a mouse
+// move doesn't restyle the whole page. Off for touch and reduced motion.
+export const installParallax = () => {
   const fine = matchMedia('(pointer: fine)')
   const calm = matchMedia('(prefers-reduced-motion: reduce)')
   let frame = 0
@@ -15,8 +16,10 @@ export const installParallax = (root: HTMLElement) => {
       if (frame) return
       frame = requestAnimationFrame(() => {
         frame = 0
-        root.style.setProperty('--mx', mx.toFixed(3))
-        root.style.setProperty('--my', my.toFixed(3))
+        for (const layer of document.querySelectorAll<HTMLElement>('.layer')) {
+          const depth = Number(layer.style.getPropertyValue('--depth')) || 0
+          layer.style.translate = `${(-mx * depth).toFixed(2)}px ${(-my * depth * 0.6).toFixed(2)}px`
+        }
       })
     },
     { passive: true },

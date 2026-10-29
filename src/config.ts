@@ -4,9 +4,6 @@ export const SERVICE_LINES = ['Xebia Data', 'Xebia Cloud']
 
 export const LOCATIONS = ['Oostenburg', 'Hilversum', 'Eindhoven']
 
-/** Downscale real photos so they match the pixel style (0 disables). */
-export const PIXELATE_PHOTOS_TO = 160
-
 /**
  * Microsoft Form that collects the picks. In Forms use
  * "..." -> "Get pre-filled URL", fill in every question, and copy the

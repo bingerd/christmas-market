@@ -44,11 +44,12 @@ everyone really gets one pick.
 - **Pictures:** every entry has an `image` path relative to `src/images/`
   (`suppliers/<supplier>/<package>.jpg`, `charities/<id>.svg`). Vite bundles
   them with hashed filenames, and `npm test` fails if one is missing. Photos
-  are 4:3 JPEGs of about 800×600 (crop them first: cards are 4:3 and get
-  center-cropped). They get downscaled a little to fit the pixel style; set
-  `PIXELATE_PHOTOS_TO = 0` to turn that off. Entries without a photo point at
-  a pixel-art `.svg`: `node scripts/make-placeholders.ts` regenerates any
-  missing ones (never overwrites existing files unless you pass `--force`).
+  are 4:3 JPEGs at full resolution in sRGB (crop them first: cards are 4:3
+  and get center-cropped). The build turns each into a range of widths up to
+  the original (`vite-imagetools`, see `vite.config.ts`), so every screen
+  downloads only the size it needs. An entry without a photo can point at a
+  pixel-art `.svg`: `node scripts/make-placeholders.ts` generates any missing
+  ones (never overwrites existing files unless you pass `--force`).
 - **Package ids** are `<supplier>-<slug>` and are what a pick is stored as, so
   keep a slug when you only reword a package.
 

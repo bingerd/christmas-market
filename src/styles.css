@@ -106,10 +106,10 @@ a {
   overflow: hidden;
   pointer-events: none;
 }
+/* parallax.ts sets each layer's translate as the mouse moves */
 .layer {
-  transform: translate3d(calc(var(--mx, 0) * var(--depth, 0) * -1px), calc(var(--my, 0) * var(--depth, 0) * -0.6px), 0);
-  transition: transform 1.2s var(--ease);
-  will-change: transform;
+  transition: translate 1.2s var(--ease);
+  will-change: translate;
 }
 .aurora {
   position: absolute;
@@ -386,7 +386,6 @@ main {
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 clamp(16px, 4vw, 48px) 80px;
-  view-transition-name: page;
 }
 
 .foot {
@@ -787,7 +786,7 @@ main {
 }
 /* down the path, a short sniff, then back up */
 .village .dog {
-  animation: dog-run 14s steps(48) infinite;
+  animation: dog-run 14s ease-in-out infinite;
 }
 .village .dog-r {
   opacity: 0;
@@ -862,8 +861,12 @@ main {
 .village .led {
   filter: drop-shadow(0 0 3px rgb(255 179 71 / 0.6));
 }
+/* walkers glide and bob a pixel per step */
 .village .walker {
-  animation: stroll 7s steps(14) infinite alternate;
+  animation: stroll 7s ease-in-out infinite alternate;
+}
+.village .walker .dancer {
+  animation: step 0.5s steps(1) infinite;
 }
 .village .w2 {
   animation-duration: 9s;
@@ -879,6 +882,11 @@ main {
 @keyframes stroll {
   to {
     transform: translate(-28px, 14px);
+  }
+}
+@keyframes step {
+  50% {
+    transform: translateY(-1px);
   }
 }
 .village {
@@ -1212,6 +1220,8 @@ main {
   aspect-ratio: 4 / 3;
   object-fit: cover;
   background: var(--night-1);
+  /* photos scale smoothly; the pixel art is vector and stays crisp anyway */
+  image-rendering: auto;
 }
 .offers,
 .charities {
@@ -1229,6 +1239,10 @@ main {
 .offers:has(> .offer:nth-child(7)) .offer-body h2 {
   font-size: 21px;
 }
+.offers:has(> .offer:nth-child(7)) .offer-body p {
+  font-size: 15px;
+  line-height: 1.5;
+}
 .offers:has(> .offer:nth-child(7)) .btn {
   padding-inline: 12px;
 }
@@ -1240,13 +1254,11 @@ main {
   .offers:has(> .offer:nth-child(7)) .offer {
     flex-direction: row;
   }
+  /* the photo keeps its 4:3 so it is never stretched past its pixels */
   .offers:has(> .offer:nth-child(7)) .offer-img {
     flex: none;
+    align-self: flex-start;
     width: 38%;
-  }
-  .offers:has(> .offer:nth-child(7)) .offer-img .photo {
-    height: 100%;
-    aspect-ratio: auto;
   }
   .offers:has(> .offer:nth-child(7)) .offer-body {
     gap: 6px;
@@ -1452,24 +1464,21 @@ legend {
 }
 
 /* --- page transitions ---------------------------------------------------- */
-::view-transition-old(page) {
-  animation: page-out 0.35s var(--ease) both;
+/* The old screen dissolves on top while the new page rises in underneath
+   (main.ts). Nothing moves as a whole, so leaving a page from halfway down
+   looks as calm as leaving it from the top. */
+::view-transition-old(root) {
+  z-index: 1;
+  mix-blend-mode: normal;
+  animation: page-out 0.3s ease-out both;
 }
-::view-transition-new(page) {
-  animation: page-in 0.6s var(--ease) both;
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: none;
 }
 @keyframes page-out {
   to {
     opacity: 0;
-    filter: blur(6px);
-    transform: translateY(-10px);
-  }
-}
-@keyframes page-in {
-  from {
-    opacity: 0;
-    filter: blur(6px);
-    transform: translateY(16px);
   }
 }
 

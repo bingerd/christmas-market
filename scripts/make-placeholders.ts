@@ -3,9 +3,9 @@
 // Existing files are kept, so tweaked art is never overwritten
 // (pass --force to overwrite anyway). Photos are never touched.
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { basename, dirname } from 'node:path'
+import { dirname } from 'node:path'
 import { charities, suppliers } from '../src/catalog.ts'
-import { charitySvg, goodsFor, packageSvg, productFor, stallSvg } from '../src/sprites.ts'
+import { charitySvg, packageSvg, productFor, stallSvg } from '../src/sprites.ts'
 
 const force = process.argv.includes('--force')
 const write = (path: string, content: () => string) => {
@@ -19,7 +19,7 @@ const write = (path: string, content: () => string) => {
 suppliers.forEach((s, i) => {
   write(s.image, () => stallSvg(s.color, productFor[s.id], i + 3))
   s.packages.forEach((p, j) =>
-    write(p.image, () => packageSvg(s.color, goodsFor[basename(p.image, '.svg')] ?? Array(Math.min(j + 1, 4)).fill(productFor[s.id]))),
+    write(p.image, () => packageSvg(s.color, Array(Math.min(j + 1, 4)).fill(productFor[s.id]))),
   )
 })
 charities.forEach((c, i) =>

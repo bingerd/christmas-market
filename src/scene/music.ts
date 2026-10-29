@@ -2,6 +2,7 @@
 // synthesised with Web Audio: no audio file to ship or license.
 
 const BEAT = 0.17 // seconds per quarter note
+const VOLUME = 0.012 // a whisper: it plays on a click, often in an open office
 const NOTE: Record<string, number> = { C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, C3: 130.81, F3: 174.61, G3: 196.0 }
 
 // [note, beats]
@@ -45,7 +46,7 @@ export const playJingle = () => {
   const now = ctx.currentTime + 0.05
   current?.gain.setTargetAtTime(0, now, 0.02)
   const master = ctx.createGain()
-  master.gain.value = 0.08
+  master.gain.value = VOLUME
   master.connect(ctx.destination)
   current = master
 

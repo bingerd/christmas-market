@@ -1,5 +1,3 @@
-import { PIXELATE_PHOTOS_TO } from '../config.ts'
-
 const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ESC[c])
 
@@ -13,46 +11,28 @@ export const steps = (current: number) => `
     ${STEPS.map((s, i) => `<li class="${i < current ? 'done' : i === current ? 'now' : ''}" ${i === current ? 'aria-current="step"' : ''}><span></span>${s}</li>`).join('')}
   </ol>`
 
-// Every picture in src/images, keyed by its path inside that folder.
-const IMAGES = import.meta.glob<string>('../images/**/*.{jpg,png,svg}', { eager: true, query: '?url', import: 'default' })
-
-// Real photos get downscaled so they sit nicely between the pixel art.
-const pixelated = new Map<string, string>()
+// Every picture in src/images, keyed by its path inside that folder. Photos come
+// with a srcset of widths up to the original (see vite.config.ts).
+const PHOTOS = import.meta.glob<{ src: string; srcset?: string }>('../images/**/*.{jpg,png}', { eager: true, query: '?photo', import: 'default' })
+const ART = import.meta.glob<string>('../images/**/*.svg', { eager: true, query: '?url', import: 'default' })
 
 /** `path` is relative to src/images, as used in the catalogue. */
 export const photo = (path: string, alt: string, cls = '') => {
-  const src = IMAGES[`../images/${path}`] ?? ''
-  // only photos are pixelated; the SVGs already are pixel art
-  const raster = !path.endsWith('.svg')
-  const shown = (raster && pixelated.get(src)) || src
-  return `<img class="photo ${cls}" src="${esc(shown)}" ${raster ? `data-src="${esc(src)}"` : ''} alt="${esc(alt)}" loading="lazy" decoding="async">`
+  const key = `../images/${path}`
+  const p = PHOTOS[key]
+  const src = p ? `src="${esc(p.src)}"${p.srcset ? ` srcset="${esc(p.srcset)}" sizes="(max-width: 559px) 100vw, 400px"` : ''}` : `src="${esc(ART[key] ?? '')}"`
+  return `<img class="photo ${cls}" ${src} alt="${esc(alt)}" loading="lazy" decoding="async">`
 }
 
-export const installPhotoPixelator = (root: HTMLElement) => {
-  if (!PIXELATE_PHOTOS_TO) return
-  root.addEventListener(
-    'load',
-    (e) => {
-      const img = e.target
-      if (!(img instanceof HTMLImageElement) || !img.classList.contains('photo')) return
-      const src = img.dataset.src
-      if (!src || pixelated.has(src) || img.naturalWidth <= PIXELATE_PHOTOS_TO) return
-      const w = PIXELATE_PHOTOS_TO
-      const h = Math.round((img.naturalHeight / img.naturalWidth) * w)
-      const canvas = document.createElement('canvas')
-      canvas.width = w
-      canvas.height = h
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-      ctx.drawImage(img, 0, 0, w, h)
-      try {
-        const url = canvas.toDataURL('image/png')
-        pixelated.set(src, url)
-        img.src = url
-      } catch {
-        pixelated.set(src, src) // cross-origin image, leave as is
-      }
-    },
-    true,
-  )
+/**
+ * Point each photo's srcset at 1.25x its laid-out width. Chrome draws a photo
+ * softest when the file is only a little bigger than its box (measured against
+ * the originals: ~0.75 of a perfect resize at 1.0-1.2x, ~0.85 from 1.25x up),
+ * so never let it pick a file that is just big enough. Call after rendering.
+ */
+export const sizePhotos = (root: ParentNode) => {
+  for (const img of root.querySelectorAll<HTMLImageElement>('img.photo[srcset]')) {
+    const w = img.getBoundingClientRect().width
+    if (w) img.sizes = `${Math.ceil(w * 1.25)}px`
+  }
 }

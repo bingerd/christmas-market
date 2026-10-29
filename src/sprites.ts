@@ -100,54 +100,6 @@ export const POT: Grid = [
   '...kkkkkk...',
 ]
 
-export const BOTTLE: Grid = [
-  '.kkk.',
-  '.kyk.',
-  '.kbk.',
-  '.kbk.',
-  'kbbBk',
-  'kbbBk',
-  'klllk',
-  'klwlk',
-  'klllk',
-  'kbbBk',
-  'kbbBk',
-  'kkkkk',
-]
-
-export const BARREL: Grid = [
-  '..kkkkkkk..',
-  '.kbbBbbBbk.',
-  'kbbBbbBbbBk',
-  'kSSSSSSSSSk',
-  'kbbBbbBbbBk',
-  'kbbBbbBbbBk',
-  'kbbBbbBbbBk',
-  'kbbBbbBbbBk',
-  'kSSSSSSSSSk',
-  'kbbBbbBbbBk',
-  '.kbbBbbBbk.',
-  '..kkkkkkk..',
-]
-
-/** `t` is the shop's colour. */
-export const GIFT_CARD: Grid = [
-  '.....kkk.kkk...........',
-  '....kyyykyyyk..........',
-  '....kyYykyYyk..........',
-  'kkkkkkyyyyykkkkkkkkkkkk',
-  'kttttttyyyttttttttttttk',
-  'kttttttyyyttttttttttttk',
-  'kyyyyyyyyyyyyyyyyyyyyyk',
-  'kYYYYYYyyyYYYYYYYYYYYYk',
-  'kttttttyyytttwwwwwwwttk',
-  'kttttttyyyttttttttttttk',
-  'kttttttyyytttwwwwwttttk',
-  'kttttttyyyttttttttttttk',
-  'kTTTTTTyyyTTTTTTTTTTTTk',
-  'kkkkkkkkkkkkkkkkkkkkkkk',
-]
-
 export const HEART: Grid = [
   '.kkk...kkk.',
   'kmmmk.kmmmk',
@@ -241,21 +193,8 @@ export const productFor: Record<string, Grid> = {
   'het-vergeten-kind': TEDDY,
 }
 
-/** Goods on placeholder package images, by file name; others repeat the stall's product. */
-export const goodsFor: Record<string, Grid[]> = {
-  'gift-card': [GIFT_CARD],
-  'barrel-aged': [BARREL, BOTTLE, BOTTLE],
-}
-
 const width = (g: Grid) => Math.max(...g.map((r) => r.length))
 
-/** Darken a #rrggbb colour by factor `f`. */
-const shade = (hex: string, f: number) =>
-  `#${hex
-    .slice(1)
-    .match(/../g)!
-    .map((c) => Math.round(parseInt(c, 16) * f).toString(16).padStart(2, '0'))
-    .join('')}`
 
 // --- Scenes used as placeholder "photos" -----------------------------------
 
@@ -327,9 +266,8 @@ export const packageSvg = (color: string, goods: Grid[]) => {
   // a few goods get drawn bigger so they fill the frame
   const scale = Math.max(1, Math.floor(56 / totalW))
   let x = Math.floor((W - totalW * scale) / 2)
-  const palette = pal({ t: color, T: shade(color, 0.7) })
   for (const g of goods) {
-    b += `<g transform="translate(${x} ${36 - g.length * scale}) scale(${scale})">${rects(g, palette)}</g>`
+    b += `<g transform="translate(${x} ${36 - g.length * scale}) scale(${scale})">${rects(g, PAL)}</g>`
     x += (width(g) + gap) * scale
   }
   return svg(W, H, b, 'width="640" height="480"')
