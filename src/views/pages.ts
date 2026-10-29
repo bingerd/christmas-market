@@ -4,7 +4,7 @@ import { type Grid, sprite } from '../pixel.ts'
 import { type Pick, type Resolved, label, needsDelivery, resolve } from '../pick.ts'
 import { givingScene, marketScene } from '../scene/gates.ts'
 import { villageSvg } from '../scene/village.ts'
-import { HEART, PAL, productFor } from '../sprites.ts'
+import { HEART, MAGNIFIER, PAL, productFor } from '../sprites.ts'
 import type { State } from '../state.ts'
 import { esc, panel, photo, steps } from './ui.ts'
 
@@ -99,7 +99,7 @@ export const stall = (state: State, id: string) => {
         .map((p) => {
           const picked = isPicked(state.pick, 'present', p.id)
           return `<article class="offer ${picked ? 'picked' : ''}">
-            <div class="offer-img">${photo(p.image, p.name)}</div>
+            <button class="offer-img zoom" data-action="zoom" aria-label="Enlarge the photo of ${esc(p.name)}">${photo(p.image, p.name)}${icon(MAGNIFIER, 'zoom-badge')}</button>
             <div class="offer-body">
               <h2>${esc(p.name)}</h2>
               <p>${esc(p.description)}</p>

@@ -10,7 +10,7 @@ import { PAL, SANTA_HAT } from './sprites.ts'
 import { sprite } from './pixel.ts'
 import { type State, load, reset, save } from './state.ts'
 import * as pages from './views/pages.ts'
-import { sizePhotos } from './views/ui.ts'
+import { enlarge, sizePhotos } from './views/ui.ts'
 
 const app = document.querySelector<HTMLElement>('#app')!
 const pill = document.querySelector<HTMLElement>('#pick-pill')!
@@ -126,6 +126,8 @@ app.addEventListener('click', (e) => {
       return update({ ...state, pick: { kind: 'present', id } }, '#/details')
     case 'pick-donate':
       return update({ ...state, pick: { kind: 'donate', id } }, '#/details')
+    case 'zoom':
+      return enlarge(el.querySelector('img')!)
     case 'reset':
       state = reset()
       location.hash = '#/'

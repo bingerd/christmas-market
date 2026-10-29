@@ -100,6 +100,22 @@ export const POT: Grid = [
   '...kkkkkk...',
 ]
 
+/** Badge on photos you can enlarge. */
+export const MAGNIFIER: Grid = [
+  '..kkkk......',
+  '.kwwllk.....',
+  'kwlllllk....',
+  'kllllllk....',
+  'kllllllk....',
+  'kllllllk....',
+  '.kllllkk....',
+  '..kkkkbbk...',
+  '......kbbk..',
+  '.......kbbk.',
+  '........kbbk',
+  '.........kk.',
+]
+
 export const HEART: Grid = [
   '.kkk...kkk.',
   'kmmmk.kmmmk',

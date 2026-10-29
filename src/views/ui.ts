@@ -24,6 +24,33 @@ export const photo = (path: string, alt: string, cls = '') => {
   return `<img class="photo ${cls}" ${src} alt="${esc(alt)}" loading="lazy" decoding="async">`
 }
 
+let lightbox: HTMLDialogElement | undefined
+
+/** Show a photo as large as the screen allows, framed in its stall's colour. */
+export const enlarge = (from: HTMLImageElement) => {
+  if (!lightbox) {
+    lightbox = document.createElement('dialog')
+    lightbox.className = 'lightbox'
+    lightbox.innerHTML = '<figure><img alt=""><figcaption><span></span><button class="link">Close</button></figcaption></figure>'
+    // a click anywhere closes it, like Esc
+    lightbox.addEventListener('click', () => lightbox?.close())
+    document.body.append(lightbox)
+  }
+  const img = lightbox.querySelector('img')!
+  img.removeAttribute('srcset')
+  // what the card already loaded shows at once...
+  img.src = from.currentSrc || from.src
+  img.alt = from.alt
+  lightbox.querySelector('figcaption span')!.textContent = from.alt
+  lightbox.style.setProperty('--glow', getComputedStyle(from).getPropertyValue('--glow'))
+  lightbox.showModal()
+  // ...and is swapped for a file big enough for this screen, up to the original
+  if (from.srcset) {
+    img.sizes = `${Math.ceil(img.getBoundingClientRect().width * 1.25)}px`
+    img.srcset = from.srcset
+  }
+}
+
 /**
  * Point each photo's srcset at 1.25x its laid-out width. Chrome draws a photo
  * softest when the file is only a little bigger than its box (measured against
