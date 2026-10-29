@@ -1,9 +1,9 @@
 // The market square: an isometric Habbo-style room with stalls, the tree,
-// the Xebia café and an LED sign. Used as hero backdrop and as the
+// the giving booth and an LED sign. Used as hero backdrop and as the
 // interactive market map.
-import { charities, suppliers } from '../catalog.ts'
+import { suppliers } from '../catalog.ts'
 import { rects, type Grid } from '../pixel.ts'
-import { AVATAR, PAL, productFor } from '../sprites.ts'
+import { AVATAR, HEART, PAL, productFor } from '../sprites.ts'
 import { pixelText, textWidth } from './font.ts'
 import { playJingle } from './music.ts'
 import { iso, rng } from './iso.ts'
@@ -94,17 +94,23 @@ const pool = (x: number, y: number, rx = 46, ry = 18, color = 'warm') => {
 
 // --- shopkeepers ------------------------------------------------------------------
 
-type Job = 'slice' | 'pour' | 'stir' | 'pack' | 'wave' | 'wipe'
+type Job = 'slice' | 'pour' | 'tap' | 'stir' | 'pack' | 'wave'
 
-const JOBS: Record<string, Job> = { alexanderhoeve: 'slice', 'weldam-wijn': 'pour', 'olala-chocola': 'stir', oldenhof: 'pack' }
+const JOBS: Record<string, Job> = {
+  'de-magistraat': 'tap',
+  balthazar: 'pack',
+  alexanderhoeve: 'slice',
+  'olala-chocola': 'stir',
+  gastrovino: 'pour',
+}
 
 const LOOKS: Record<Job, { shirt: string; hair: string }> = {
   slice: { shirt: '#2e7d4f', hair: '#e8c170' },
   pour: { shirt: '#5e0f2e', hair: '#1b1028' },
+  tap: { shirt: '#3d9be0', hair: '#1b1028' },
   stir: { shirt: '#7b4a2d', hair: '#3b2416' },
   pack: { shirt: '#2b6cb0', hair: '#7a3b12' },
   wave: { shirt: '#e5007d', hair: '#3b2416' },
-  wipe: { shirt: '#6c1d7f', hair: '#e8c170' },
 }
 
 // the avatar with an apron (the white shirt dots become its straps)
@@ -120,6 +126,23 @@ const frames = (a: string, b: string, speed: number) =>
 const heart = (x: number, y: number, delay: number) =>
   `<g class="heart" style="animation-delay:${delay}s">${px(x, y, 1, 1, '#e5007d')}${px(x + 2, y, 1, 1, '#e5007d')}${px(x, y + 1, 3, 1, '#e5007d')}${px(x + 1, y + 2, 1, 1, '#e5007d')}</g>`
 
+/** A bottle tipping into a glass on the counter; `head` is the top of the drink. */
+const pouring =
+  (bottle: string, drink: string, head = drink) =>
+  (a: number, c: number) =>
+    px(a + 4, c - 2, 1, 2, '#bfe3ff') +
+    px(a + 3, c, 3, 1, '#bfe3ff') +
+    frames(
+      px(a + 3, c - 5, 3, 3, '#bfe3ff') + px(a - 6, c - 9, 3, 8, bottle) + px(a - 5, c - 11, 1, 2, bottle),
+      px(a + 3, c - 5, 3, 3, drink) +
+        px(a + 3, c - 5, 3, 1, head) +
+        px(a - 2, c - 10, 3, 3, bottle) +
+        px(a + 1, c - 11, 2, 2, bottle) +
+        px(a + 3, c - 12, 1, 1, bottle) +
+        px(a + 4, c - 10, 1, 5, drink),
+      1.6,
+    )
+
 /** Props per job; a is the keeper's centre, c the counter top. */
 const PROPS: Record<Job, (a: number, c: number) => string> = {
   slice: (a, c) =>
@@ -130,18 +153,8 @@ const PROPS: Record<Job, (a: number, c: number) => string> = {
       px(a + 2, c - 8, 1, 2, WOOD_DEEP) + px(a + 2, c - 6, 1, 6, '#d6dbe8') + px(a + 4, c - 3, 3, 3, '#ffd23f'),
       0.7,
     ),
-  pour: (a, c) =>
-    px(a + 4, c - 2, 1, 2, '#bfe3ff') +
-    px(a + 3, c, 3, 1, '#bfe3ff') +
-    frames(
-      px(a + 3, c - 5, 3, 3, '#bfe3ff') + px(a - 6, c - 9, 3, 8, '#5e0f2e') + px(a - 5, c - 11, 1, 2, '#5e0f2e'),
-      px(a + 3, c - 5, 3, 3, '#8e1e46') +
-        px(a - 2, c - 10, 3, 3, '#5e0f2e') +
-        px(a + 1, c - 11, 2, 2, '#5e0f2e') +
-        px(a + 3, c - 12, 1, 1, '#5e0f2e') +
-        px(a + 4, c - 10, 1, 5, '#8e1e46'),
-      1.6,
-    ),
+  pour: pouring('#5e0f2e', '#8e1e46'),
+  tap: pouring('#4e2c18', '#e8a33c', '#fff4e6'),
   stir: (a, c) =>
     px(a - 4, c - 4, 8, 4, '#544b70') +
     px(a - 5, c - 5, 10, 1, '#6b6286') +
@@ -165,7 +178,6 @@ const PROPS: Record<Job, (a: number, c: number) => string> = {
       px(a - 10, c - 16, 2, 2, LOOKS.wave.shirt) + px(a - 12, c - 19, 2, 3, '#f5c7a1'),
       0.5,
     ) + [0, 1, 2].map((i) => heart(a + 4 + i * 2, c - 16, i)).join(''),
-  wipe: (a, c) => frames(px(a - 6, c - 1, 4, 1, '#fff'), px(a - 1, c - 1, 4, 1, '#fff'), 0.9),
 }
 
 /** Shopkeeper behind the counter (drawn before it) plus the props of their job (drawn after it). */
@@ -348,41 +360,6 @@ const tree = (x: number, y: number) => {
   return g
 }
 
-// --- café ------------------------------------------------------------------------
-
-const steam = (x: number, y: number, z: number) => {
-  const [a, b] = at(x, y, z)
-  return `<g class="steam">${[0, 1, 2]
-    .map((i) => `<rect x="${a - 1 + (i % 2) * 2}" y="${b - 4}" width="2" height="2" style="animation-delay:${i * 0.8}s"/>`)
-    .join('')}</g>`
-}
-
-const cafe = (x: number, y: number, facing: 'x' | 'y') => {
-  const extra = (sx: number, sy: number) => {
-    let out = ''
-    for (let i = 0; i < 3; i++) {
-      const cx = sx + 0.3 + i * 0.6
-      const [a, b] = at(cx, sy + 0.83, 15)
-      out += `<rect x="${a - 2}" y="${b - 4}" width="4" height="4" fill="#fff"/><rect x="${a + 2}" y="${b - 3}" width="1" height="2" fill="#fff"/>`
-      out += steam(cx, sy + 0.83, 19)
-    }
-    return out
-  }
-  return stall({ x, y, facing, color: '#6c1d7f', icon: CUP, name: 'Xebia Cafe', goods: ['#fff4d6', '#c98a00'], extra, keeper: 'wipe' })
-}
-
-const CUP: Grid = [
-  '.k.k.k..',
-  'k.k.k...',
-  '........',
-  'kkkkkk..',
-  'kwwwwkkk',
-  'kwwwwk.k',
-  'kwwwwkkk',
-  'kwwwwk..',
-  '.kkkk...',
-]
-
 // --- LED sign --------------------------------------------------------------------
 
 const ledSign = (x: number, y: number, message: string) => {
@@ -554,6 +531,7 @@ const STALL_SPOTS: Array<{ x: number; y: number; facing: 'x' | 'y' }> = [
   { x: 0.4, y: 2.2, facing: 'x' },
   { x: 5.6, y: 0.4, facing: 'y' },
   { x: 0.4, y: 5.6, facing: 'x' },
+  { x: 0.4, y: 9, facing: 'x' },
 ]
 
 /** Light pool in front of a stall's open side. */
@@ -590,16 +568,13 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
       x: 9,
       y: 0.4,
       color: '#e5007d',
-      icon: productFor[charities[0]?.id] ?? productFor['free-a-girl'],
+      icon: HEART,
       name: 'Giving booth',
       keeper: 'wave',
       href: interactive ? '#/donate' : undefined,
       goods: ['#e5007d', '#ffd23f'],
     }),
   })
-
-  pools.push(stallPool(0.4, 9, 'x'))
-  items.push({ depth: 11.4, svg: cafe(0.4, 9, 'x') })
 
   pools.push(pool(6.5, 6.5, 64, 28))
   items.push({ depth: 13, svg: tree(6.5, 6.5) })

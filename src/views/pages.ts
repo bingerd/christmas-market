@@ -1,14 +1,14 @@
 import { charities, suppliers } from '../catalog.ts'
 import { FORM_URL, LOCATIONS, SERVICE_LINES } from '../config.ts'
-import { sprite } from '../pixel.ts'
+import { type Grid, sprite } from '../pixel.ts'
 import { type Pick, type Resolved, label, needsDelivery, resolve } from '../pick.ts'
 import { givingScene, marketScene } from '../scene/gates.ts'
 import { villageSvg } from '../scene/village.ts'
-import { PAL, productFor } from '../sprites.ts'
+import { HEART, PAL, productFor } from '../sprites.ts'
 import type { State } from '../state.ts'
 import { esc, panel, photo, steps } from './ui.ts'
 
-const icon = (id: string, cls = 'icon') => `<span class="${cls}" aria-hidden="true">${sprite(productFor[id], PAL)}</span>`
+const icon = (grid: Grid, cls = 'icon') => `<span class="${cls}" aria-hidden="true">${sprite(grid, PAL)}</span>`
 
 const isPicked = (pick: Pick | null, kind: Pick['kind'], id: string) => pick?.kind === kind && pick.id === id
 
@@ -65,10 +65,10 @@ export const market = (state: State) => `
       ${suppliers
         .map(
           (s) => `<a class="stall-chip ${state.pick?.kind === 'present' && state.pick.id.startsWith(`${s.id}-`) ? 'has-pick' : ''}" href="#/stall/${s.id}" style="--glow:${s.color}">
-            ${icon(s.id, 'chip-icon')}<span><strong>${esc(s.name)}</strong><small>${esc(s.kind)}</small></span></a>`,
+            ${icon(productFor[s.id], 'chip-icon')}<span><strong>${esc(s.name)}</strong><small>${esc(s.kind)}</small></span></a>`,
         )
         .join('')}
-      <a class="stall-chip" href="#/donate" style="--glow:#e5007d">${icon('free-a-girl', 'chip-icon')}<span><strong>Giving booth</strong><small>Donate instead</small></span></a>
+      <a class="stall-chip" href="#/donate" style="--glow:#e5007d">${icon(HEART, 'chip-icon')}<span><strong>Giving booth</strong><small>Donate instead</small></span></a>
     </nav>
   </section>`
 

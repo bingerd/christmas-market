@@ -72,16 +72,80 @@ export const CHOCOLATE: Grid = [
   'kkkkkkkkkk',
 ]
 
-export const BASKET: Grid = [
-  '...kkkk...',
-  '..k....k..',
-  '.k......k.',
-  'kkrkgkykrk',
-  'kbBbBbBbBk',
-  'kBbBbBbBbk',
-  'kbBbBbBbBk',
-  '.kBbBbBbk.',
-  '..kkkkkk..',
+export const BEER: Grid = [
+  '.kkkkkkkk...',
+  'kwwwswwwwk..',
+  'kwwwwwwswk..',
+  'kyyyyyyyykkk',
+  'kyywyyyyyk.k',
+  'kyyyyyyYyk.k',
+  'kyyyyyyyyk.k',
+  'kyyyywyyYk.k',
+  'kyyyyyyyykkk',
+  'kYyyyyyyYk..',
+  'kYYYYYYYYk..',
+  '.kkkkkkkk...',
+]
+
+export const POT: Grid = [
+  '.....kk.....',
+  '....kRRk....',
+  '..kkkkkkkk..',
+  '.krrwrrrrrk.',
+  'kkkkkkkkkkkk',
+  'k.krrrrrRk.k',
+  'kkkrwrrrRkkk',
+  '..krrrrrRk..',
+  '..kRRRRRRk..',
+  '...kkkkkk...',
+]
+
+export const BOTTLE: Grid = [
+  '.kkk.',
+  '.kyk.',
+  '.kbk.',
+  '.kbk.',
+  'kbbBk',
+  'kbbBk',
+  'klllk',
+  'klwlk',
+  'klllk',
+  'kbbBk',
+  'kbbBk',
+  'kkkkk',
+]
+
+export const BARREL: Grid = [
+  '..kkkkkkk..',
+  '.kbbBbbBbk.',
+  'kbbBbbBbbBk',
+  'kSSSSSSSSSk',
+  'kbbBbbBbbBk',
+  'kbbBbbBbbBk',
+  'kbbBbbBbbBk',
+  'kbbBbbBbbBk',
+  'kSSSSSSSSSk',
+  'kbbBbbBbbBk',
+  '.kbbBbbBbk.',
+  '..kkkkkkk..',
+]
+
+/** `t` is the shop's colour. */
+export const GIFT_CARD: Grid = [
+  '.....kkk.kkk...........',
+  '....kyyykyyyk..........',
+  '....kyYykyYyk..........',
+  'kkkkkkyyyyykkkkkkkkkkkk',
+  'kttttttyyyttttttttttttk',
+  'kttttttyyyttttttttttttk',
+  'kyyyyyyyyyyyyyyyyyyyyyk',
+  'kYYYYYYyyyYYYYYYYYYYYYk',
+  'kttttttyyytttwwwwwwwttk',
+  'kttttttyyyttttttttttttk',
+  'kttttttyyytttwwwwwttttk',
+  'kttttttyyyttttttttttttk',
+  'kTTTTTTyyyTTTTTTTTTTTTk',
+  'kkkkkkkkkkkkkkkkkkkkkkk',
 ]
 
 export const HEART: Grid = [
@@ -97,18 +161,31 @@ export const HEART: Grid = [
   '.....k.....',
 ]
 
-export const HOUSE: Grid = [
-  '.....kk.....',
-  '....krrk....',
-  '...krrrrk...',
-  '..krrrrrrk..',
-  '.krrrrrrrrk.',
+export const PANDA: Grid = [
+  '.kkk....kkk.',
   'kkkkkkkkkkkk',
-  '.ksssssssk..',
-  '.ksyysbbsk..',
-  '.ksyysbbsk..',
-  '.ksssssbbk..',
-  '.kkkkkkkkk..',
+  'kkwwwwwwwwkk',
+  'kwwwwwwwwwwk',
+  'kwkkkwwkkkwk',
+  'kwkwkwwkwkwk',
+  'kwkkwwwwkkwk',
+  'kwwwwkkwwwwk',
+  'kSwwwwwwwwSk',
+  '.kSwwkkwwSk.',
+  '..kkkkkkkk..',
+]
+
+export const TEDDY: Grid = [
+  '.kkk.....kkk.',
+  'kFfFkkkkkFfFk',
+  'kFFFFFFFFFFFk',
+  '.kFFFFFFFFFk.',
+  'kFFkFFFFFkFFk',
+  'kFFFFfffFFFFk',
+  'kFFFFfkfFFFFk',
+  '.kFFFfffFFFk.',
+  '..kFFFFFFFk..',
+  '...kkkkkkk...',
 ]
 
 /** Habbo-ish avatar, 10x20. `t` is the shirt colour. */
@@ -155,15 +232,30 @@ export const avatar = (shirt: string, hair = PAL.h, attrs = '') =>
   svg(10, 20, rects(AVATAR, pal({ t: shirt, h: hair })), attrs)
 
 export const productFor: Record<string, Grid> = {
+  'de-magistraat': BEER,
+  balthazar: POT,
   alexanderhoeve: CHEESE,
-  'weldam-wijn': WINE,
   'olala-chocola': CHOCOLATE,
-  oldenhof: BASKET,
-  'free-a-girl': HEART,
-  'leger-des-heils': HOUSE,
+  gastrovino: WINE,
+  wwf: PANDA,
+  'het-vergeten-kind': TEDDY,
+}
+
+/** Goods on placeholder package images, by file name; others repeat the stall's product. */
+export const goodsFor: Record<string, Grid[]> = {
+  'gift-card': [GIFT_CARD],
+  'barrel-aged': [BARREL, BOTTLE, BOTTLE],
 }
 
 const width = (g: Grid) => Math.max(...g.map((r) => r.length))
+
+/** Darken a #rrggbb colour by factor `f`. */
+const shade = (hex: string, f: number) =>
+  `#${hex
+    .slice(1)
+    .match(/../g)!
+    .map((c) => Math.round(parseInt(c, 16) * f).toString(16).padStart(2, '0'))
+    .join('')}`
 
 // --- Scenes used as placeholder "photos" -----------------------------------
 
@@ -220,21 +312,26 @@ export const stallSvg = (color: string, product: Grid, seed = 1) => {
   return svg(W, H, b, 'width="640" height="480"')
 }
 
-/** A crate with `count` copies of a product, used as package placeholder. */
-export const packageSvg = (color: string, product: Grid, count: number) => {
+/** Goods lined up on a counter, used as package placeholder. */
+export const packageSvg = (color: string, goods: Grid[]) => {
   const W = 64
   const H = 48
-  let b = `<rect width="${W}" height="${H}" fill="#2a1f4f"/>`
+  let b = `<rect width="${W}" height="${H}" fill="#3d3175"/>`
   b += `<rect x="0" y="34" width="${W}" height="14" fill="#7b4a2d"/>`
   b += `<rect x="0" y="34" width="${W}" height="2" fill="#a06a3f"/>`
   // ribbon backdrop
   b += `<rect x="0" y="8" width="${W}" height="3" fill="${color}" opacity=".6"/>`
-  const pw = width(product)
+  b += snowflakes(W, 30, goods.length + 4)
   const gap = 2
-  const totalW = count * pw + (count - 1) * gap
-  const start = Math.floor((W - totalW) / 2)
-  for (let i = 0; i < count; i++)
-    b += `<g transform="translate(${start + i * (pw + gap)} ${35 - product.length + 1})">${rects(product, PAL)}</g>`
+  const totalW = goods.reduce((sum, g) => sum + width(g), 0) + (goods.length - 1) * gap
+  // a few goods get drawn bigger so they fill the frame
+  const scale = Math.max(1, Math.floor(56 / totalW))
+  let x = Math.floor((W - totalW * scale) / 2)
+  const palette = pal({ t: color, T: shade(color, 0.7) })
+  for (const g of goods) {
+    b += `<g transform="translate(${x} ${36 - g.length * scale}) scale(${scale})">${rects(g, palette)}</g>`
+    x += (width(g) + gap) * scale
+  }
   return svg(W, H, b, 'width="640" height="480"')
 }
 

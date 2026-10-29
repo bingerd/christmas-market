@@ -20,7 +20,7 @@ in Forms / Excel like any other form.
    | Question | Type | Options |
    | --- | --- | --- |
    | Type | Choice | `Present`, `Donation` |
-   | Choice | Text | (filled with e.g. `Olala Chocola – Bonbon box` or `Donation to Free a Girl`) |
+   | Choice | Text | (filled with e.g. `Olala Chocola – Bonbon workshop` or `Donation to WWF`) |
    | Service line | Choice | exactly the values in `SERVICE_LINES` |
    | Drop-off location | Choice | exactly the values in `LOCATIONS`, plus `Not applicable (donation)` |
 2. Settings → **Only people in my organisation can respond** and **Record name**.
@@ -41,12 +41,16 @@ everyone really gets one pick.
 - **Service lines, locations:** `src/config.ts`
 - **Charities, suppliers, packages (names, descriptions):** `src/catalog.ts`
 - **The market square scene** (stall positions, LED sign text, people): `src/scene/village.ts`
-- **Pictures:** every entry has an `image` path under `public/images/`.
-  Replace the placeholder with a real photo (keep the filename, or point
-  `image` at the new file, e.g. `.jpg`). Photos get downscaled a little to fit
-  the pixel style; set `PIXELATE_PHOTOS_TO = 0` to turn that off.
-  `node scripts/make-placeholders.ts` regenerates any missing placeholders
-  (never overwrites existing files unless you pass `--force`).
+- **Pictures:** every entry has an `image` path relative to `src/images/`
+  (`suppliers/<supplier>/<package>.jpg`, `charities/<id>.svg`). Vite bundles
+  them with hashed filenames, and `npm test` fails if one is missing. Photos
+  are 4:3 JPEGs of about 800×600 (crop them first: cards are 4:3 and get
+  center-cropped). They get downscaled a little to fit the pixel style; set
+  `PIXELATE_PHOTOS_TO = 0` to turn that off. Entries without a photo point at
+  a pixel-art `.svg`: `node scripts/make-placeholders.ts` regenerates any
+  missing ones (never overwrites existing files unless you pass `--force`).
+- **Package ids** are `<supplier>-<slug>` and are what a pick is stored as, so
+  keep a slug when you only reword a package.
 
 ## Development
 

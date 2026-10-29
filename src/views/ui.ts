@@ -13,12 +13,19 @@ export const steps = (current: number) => `
     ${STEPS.map((s, i) => `<li class="${i < current ? 'done' : i === current ? 'now' : ''}" ${i === current ? 'aria-current="step"' : ''}><span></span>${s}</li>`).join('')}
   </ol>`
 
+// Every picture in src/images, keyed by its path inside that folder.
+const IMAGES = import.meta.glob<string>('../images/**/*.{jpg,png,svg}', { eager: true, query: '?url', import: 'default' })
+
 // Real photos get downscaled so they sit nicely between the pixel art.
 const pixelated = new Map<string, string>()
 
-export const photo = (src: string, alt: string, cls = '') => {
-  const cached = pixelated.get(src)
-  return `<img class="photo ${cls}" src="${esc(cached ?? src)}" data-src="${esc(src)}" alt="${esc(alt)}" loading="lazy" decoding="async">`
+/** `path` is relative to src/images, as used in the catalogue. */
+export const photo = (path: string, alt: string, cls = '') => {
+  const src = IMAGES[`../images/${path}`] ?? ''
+  // only photos are pixelated; the SVGs already are pixel art
+  const raster = !path.endsWith('.svg')
+  const shown = (raster && pixelated.get(src)) || src
+  return `<img class="photo ${cls}" src="${esc(shown)}" ${raster ? `data-src="${esc(src)}"` : ''} alt="${esc(alt)}" loading="lazy" decoding="async">`
 }
 
 export const installPhotoPixelator = (root: HTMLElement) => {
@@ -28,8 +35,8 @@ export const installPhotoPixelator = (root: HTMLElement) => {
     (e) => {
       const img = e.target
       if (!(img instanceof HTMLImageElement) || !img.classList.contains('photo')) return
-      const src = img.dataset.src ?? ''
-      if (pixelated.has(src) || /\.svg($|\?)/i.test(src) || img.naturalWidth <= PIXELATE_PHOTOS_TO) return
+      const src = img.dataset.src
+      if (!src || pixelated.has(src) || img.naturalWidth <= PIXELATE_PHOTOS_TO) return
       const w = PIXELATE_PHOTOS_TO
       const h = Math.round((img.naturalHeight / img.naturalWidth) * w)
       const canvas = document.createElement('canvas')

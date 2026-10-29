@@ -31,6 +31,8 @@ gates, so do not skip them.
 
 - `src/config.ts` — service lines, locations, Form URL + question ids
 - `src/catalog.ts` — charities, suppliers and their packages
+- `src/images/` — catalogue pictures (photos per supplier, pixel-art SVGs),
+  resolved through `import.meta.glob` in `src/views/ui.ts`
 - `src/pick.ts`, `src/formLink.ts` — pure logic (unit tested); one pick per person
 - `src/views/` — page rendering (`pages.ts`) and shared bits (`ui.ts`)
 - `src/scene/` — the pixel world: isometric helpers, 3×5 pixel font, skyline,
