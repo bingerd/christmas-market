@@ -1,4 +1,4 @@
-import { type Pick, formLabel, resolve } from './pick.ts'
+import { type Pick, formLabel, needsDelivery, resolve } from './pick.ts'
 
 export interface FormConfig {
   url: string
@@ -23,7 +23,7 @@ export const buildFormUrl = (config: FormConfig, details: Details, pick: Pick | 
   const answers: [string, string][] = [
     [config.fields.type, quoted(config.typeLabels[resolved.kind])],
     [config.fields.choice, formLabel(resolved)],
-    [config.fields.location, quoted(resolved.kind === 'present' ? details.location : config.noDeliveryLabel)],
+    [config.fields.location, quoted(needsDelivery(pick) ? details.location : config.noDeliveryLabel)],
   ]
   const query = answers.map(([field, value]) => `&${field}=${encodeURIComponent(value)}`).join('')
   return config.url + query

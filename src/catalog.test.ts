@@ -24,7 +24,7 @@ describe('catalog', () => {
     expect(missing).toEqual([])
   })
 
-  it('has a pixel-art icon for every stall and charity', () => {
-    for (const { id } of [...suppliers, ...charities]) expect(productFor[id], id).toBeDefined()
+  it('has a pixel-art icon for every stall', () => {
+    for (const { id } of suppliers) expect(productFor[id], id).toBeDefined()
   })
 })

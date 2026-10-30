@@ -27,10 +27,11 @@ describe('buildFormUrl', () => {
     expect(p.get('r4')).toBe('"n/a"')
   })
 
-  it('names an adopted animal in Dutch', () => {
-    const p = params(buildFormUrl(config, { location: '' }, { kind: 'donate', id: 'wwf-orangutan' }))
+  it('names an adopted animal in Dutch and drops off its pack', () => {
+    const p = params(buildFormUrl(config, { location: 'Oostenburg' }, { kind: 'donate', id: 'wwf-orangutan' }))
     expect(p.get('r1')).toBe('"Donation"')
     expect(p.get('r2')).toBe('WWF – Adopteer een orang-oetan')
+    expect(p.get('r4')).toBe('"Oostenburg"')
   })
 
   it('encodes special characters and refuses invalid picks', () => {

@@ -129,33 +129,6 @@ export const HEART: Grid = [
   '.....k.....',
 ]
 
-export const PANDA: Grid = [
-  '.kkk....kkk.',
-  'kkkkkkkkkkkk',
-  'kkwwwwwwwwkk',
-  'kwwwwwwwwwwk',
-  'kwkkkwwkkkwk',
-  'kwkwkwwkwkwk',
-  'kwkkwwwwkkwk',
-  'kwwwwkkwwwwk',
-  'kSwwwwwwwwSk',
-  '.kSwwkkwwSk.',
-  '..kkkkkkkk..',
-]
-
-export const TEDDY: Grid = [
-  '.kkk.....kkk.',
-  'kFfFkkkkkFfFk',
-  'kFFFFFFFFFFFk',
-  '.kFFFFFFFFFk.',
-  'kFFkFFFFFkFFk',
-  'kFFFFfffFFFFk',
-  'kFFFFfkfFFFFk',
-  '.kFFFfffFFFk.',
-  '..kFFFFFFFk..',
-  '...kkkkkkk...',
-]
-
 /** Habbo-ish avatar, 10x20. `t` is the shirt colour. */
 // Sits on the top-right arm of the Xebia X in the header.
 export const SANTA_HAT: Grid = [
@@ -205,8 +178,6 @@ export const productFor: Record<string, Grid> = {
   alexanderhoeve: CHEESE,
   'olala-chocola': CHOCOLATE,
   gastrovino: WINE,
-  wwf: PANDA,
-  'het-vergeten-kind': TEDDY,
 }
 
 const width = (g: Grid) => Math.max(...g.map((r) => r.length))
@@ -286,17 +257,5 @@ export const packageSvg = (color: string, goods: Grid[]) => {
     b += `<g transform="translate(${x} ${36 - g.length * scale}) scale(${scale})">${rects(g, PAL)}</g>`
     x += (width(g) + gap) * scale
   }
-  return svg(W, H, b, 'width="640" height="480"')
-}
-
-export const charitySvg = (color: string, product: Grid) => {
-  const W = 64
-  const H = 48
-  let b = `<rect width="${W}" height="${H}" fill="${color}"/>`
-  b += snowflakes(W, H, 7)
-  const scale = 2
-  const pw = width(product) * scale
-  const ph = product.length * scale
-  b += `<g transform="translate(${(W - pw) / 2} ${(H - ph) / 2}) scale(${scale})">${rects(product, PAL)}</g>`
   return svg(W, H, b, 'width="640" height="480"')
 }

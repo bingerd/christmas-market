@@ -29,9 +29,10 @@ describe('pick', () => {
     expect(resolve({ kind: 'donate', id: 'wwf' })).toBeNull()
   })
 
-  it('only presents need a drop-off location', () => {
+  it('only presents and adoptions need a drop-off location', () => {
     expect(needsDelivery({ kind: 'present', id: 'balthazar-pasta-machine' })).toBe(true)
-    expect(needsDelivery({ kind: 'donate', id: 'wwf-tiger' })).toBe(false)
+    expect(needsDelivery({ kind: 'donate', id: 'wwf-tiger' })).toBe(true)
+    expect(needsDelivery({ kind: 'donate', id: 'het-vergeten-kind' })).toBe(false)
     expect(needsDelivery(null)).toBe(false)
   })
 

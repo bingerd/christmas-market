@@ -5,8 +5,8 @@ A cozy pixel-art (Habbo Hotel style) Christmas market. Every Xebian picks
 Live at <https://christmas.bngrd.com>.
 
 Flow: **landing → present or donate? → market square → stall / giving booth
-(WWF: pick an animal to adopt) → drop-off location (presents only) → review →
-confirm in Microsoft Forms.**
+(WWF: pick an animal to adopt) → drop-off location (presents and WWF adoption
+packs) → review → confirm in Microsoft Forms.**
 
 ## How orders are collected
 
@@ -44,8 +44,8 @@ everyone really gets one pick.
   Dutch `formName`, the name the stall itself uses.
 - **The market square scene** (stall positions, LED sign text, people): `src/scene/village.ts`
 - **Pictures:** every entry has an `image` path relative to `src/images/`
-  (`suppliers/<supplier>/<package>.jpg`, `charities/<id>.svg`,
-  `charities/wwf/<animal>.jpg`). Vite bundles
+  (`suppliers/<supplier>/<package>.jpg`, `charities/wwf/<animal>.jpg`, and
+  `charities/<id>.svg`: the charity's official logo on a white 4:3 card). Vite bundles
   them with hashed filenames, and `npm test` fails if one is missing. Photos
   are 4:3 JPEGs at full resolution in sRGB (crop them first: cards are 4:3
   and get center-cropped). The build turns each into a range of widths up to

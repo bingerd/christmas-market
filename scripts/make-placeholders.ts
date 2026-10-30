@@ -1,11 +1,12 @@
-// Regenerates the pixel-art placeholder images (the .svg ones) in src/images.
+// Regenerates the pixel-art placeholder images (the .svg ones) of the stalls in
+// src/images. The charity pictures are their real logos.
 // Run with: node scripts/make-placeholders.ts
 // Existing files are kept, so tweaked art is never overwritten
 // (pass --force to overwrite anyway). Photos are never touched.
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
-import { charities, suppliers } from '../src/catalog.ts'
-import { charitySvg, packageSvg, productFor, stallSvg } from '../src/sprites.ts'
+import { suppliers } from '../src/catalog.ts'
+import { packageSvg, productFor, stallSvg } from '../src/sprites.ts'
 
 const force = process.argv.includes('--force')
 const write = (path: string, content: () => string) => {
@@ -22,6 +23,3 @@ suppliers.forEach((s, i) => {
     write(p.image, () => packageSvg(s.color, Array(Math.min(j + 1, 4)).fill(productFor[s.id]))),
   )
 })
-charities.forEach((c, i) =>
-  write(c.image, () => charitySvg(['#2e7d4f', '#6c1d7f'][i % 2], productFor[c.id])),
-)

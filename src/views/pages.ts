@@ -173,7 +173,7 @@ const pickSummary = (r: Resolved) => {
   const change = r.kind === 'present' ? `#/stall/${r.supplier.id}` : r.animal ? `#/donate/${r.charity.id}` : '#/donate'
   return `<div class="pick-summary">
     ${photo(img, '', 'pick-thumb')}
-    <div><p class="eyebrow">${r.kind === 'present' ? 'Your present' : 'Your donation'}</p><strong>${esc(label(r))}</strong></div>
+    <div><p class="eyebrow">${r.kind === 'present' ? 'Your present' : r.animal ? 'Your adoption' : 'Your donation'}</p><strong>${esc(label(r))}</strong></div>
     <a class="link" href="${change}">Change</a>
   </div>`
 }
@@ -181,7 +181,7 @@ const pickSummary = (r: Resolved) => {
 const choice = (name: string, value: string, checked: boolean) =>
   `<label class="choice"><input type="radio" name="${name}" value="${esc(value)}" ${checked ? 'checked' : ''}><span>${esc(value)}</span></label>`
 
-/** Only presents have details to fill in: where to drop them off. */
+/** Only picks that get delivered have details to fill in: where to drop them off. */
 export const details = (state: State) => {
   const r = resolve(state.pick)
   if (!r || !needsDelivery(state.pick)) return null
@@ -190,7 +190,7 @@ export const details = (state: State) => {
     ${pickSummary(r)}
     <form data-form="details" novalidate>
       <fieldset>
-        <legend>Where should we drop off your present?</legend>
+        <legend>Where should we drop off your ${r.kind === 'present' ? 'present' : 'adoption pack'}?</legend>
         <div class="choices">${LOCATIONS.map((l) => choice('location', l, state.location === l)).join('')}</div>
       </fieldset>
       <p class="hint">No need to fill in your email. You'll sign in with your Xebia account in the last step, and that's how we know it's you.</p>
@@ -207,7 +207,7 @@ export const review = (state: State, formUrl: string | null) => {
   return `${steps(3)}${panel(
     `<h1>All set?</h1>
     ${pickSummary(r)}
-    ${r.kind === 'present' ? `<dl class="facts"><dt>Drop-off</dt><dd>${esc(state.location)}</dd></dl>` : ''}
+    ${needsDelivery(state.pick) ? `<dl class="facts"><dt>Drop-off</dt><dd>${esc(state.location)}</dd></dl>` : ''}
     ${
       formUrl
         ? `<p class="hint">Last step: Microsoft Forms opens with your answers already filled in. Sign in with your Xebia account and press <strong>Submit</strong>. Nothing is ordered until you do.</p>
@@ -215,7 +215,7 @@ export const review = (state: State, formUrl: string | null) => {
         : `<p class="hint warn">The order form isn't connected yet${FORM_URL ? '' : ' (FORM_URL is empty in src/config.ts)'}. Check back soon!</p>`
     }
     <div class="actions split">
-      ${r.kind === 'present' ? '<a class="link" href="#/details">← Edit details</a>' : '<span></span>'}
+      ${needsDelivery(state.pick) ? '<a class="link" href="#/details">← Edit details</a>' : '<span></span>'}
       <button class="link" data-action="reset">Start over</button>
     </div>`,
     'narrow',

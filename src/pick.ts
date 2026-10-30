@@ -28,7 +28,11 @@ export const label = (r: Resolved) => describe(r, 'name')
 /** What ends up in the Form: the Dutch names the stalls know their products by. */
 export const formLabel = (r: Resolved) => describe(r, 'formName')
 
-export const needsDelivery = (pick: Pick | null) => resolve(pick)?.kind === 'present'
+/** Presents and adoption packs get dropped off at an office; a plain donation doesn't. */
+export const needsDelivery = (pick: Pick | null) => {
+  const r = resolve(pick)
+  return r?.kind === 'present' || !!r?.animal
+}
 
 /** Validate whatever came out of storage against the catalogue. */
 export const sanitize = (raw: unknown): Pick | null => {

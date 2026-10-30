@@ -55,7 +55,7 @@ export const charities: Charity[] = [
     id: 'wwf',
     name: 'WWF',
     tagline: 'Adopt an animal',
-    description: "Works around the world to protect wildlife and the places they live. Adopt one of five animals: a symbolic adoption that funds WWF's work to protect that animal in the wild.",
+    description: "Works around the world to protect wildlife and the places they live. Adopt one of five animals: a symbolic adoption that funds WWF's work to protect that animal in the wild. We'll drop off WWF's adoption pack at your office.",
     image: 'charities/wwf.svg',
     url: 'https://webshop.wwf.nl/pages/adopteer-een-dier',
     animals: stock(

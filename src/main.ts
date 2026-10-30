@@ -1,7 +1,7 @@
 import './styles.css'
 import { FORM_FIELDS, FORM_TYPE_LABELS, FORM_URL, NO_DELIVERY_LABEL } from './config.ts'
 import { buildFormUrl } from './formLink.ts'
-import { needsDelivery } from './pick.ts'
+import { type Pick, needsDelivery } from './pick.ts'
 import { installParallax } from './scene/parallax.ts'
 import { santaSvg } from './scene/santa.ts'
 import { installDance } from './scene/village.ts'
@@ -38,6 +38,9 @@ const formUrl = () => {
 }
 
 const detailsComplete = () => !needsDelivery(state.pick) || !!state.location
+
+/** Ask where to drop it off, unless there is nothing to deliver. */
+const choose = (pick: Pick) => update({ ...state, pick }, needsDelivery(pick) ? '#/details' : '#/review')
 
 const redirect = (path: string) => {
   queueMicrotask(() => location.replace(`#${path}`))
@@ -124,9 +127,9 @@ app.addEventListener('click', (e) => {
   const id = el.dataset.id ?? ''
   switch (el.dataset.action) {
     case 'pick-present':
-      return update({ ...state, pick: { kind: 'present', id } }, '#/details')
+      return choose({ kind: 'present', id })
     case 'pick-donate':
-      return update({ ...state, pick: { kind: 'donate', id } }, '#/review')
+      return choose({ kind: 'donate', id })
     case 'zoom':
       return enlarge(el.querySelector('img')!, id)
     case 'reset':
