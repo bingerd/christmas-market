@@ -146,6 +146,24 @@ export const SANTA_HAT: Grid = [
   '.kkkkkkkkkk....',
 ]
 
+// Hot chocolate next to the footer credit; the steam drifts on its own.
+export const COCOA: Grid = [
+  'kkkkkkkk..',
+  'kcwccwck..',
+  'krrrrrrrr.',
+  'kwrrrrrk.r',
+  'kwrrrrrk.r',
+  'krrrrrrrr.',
+  'kRrrrrRk..',
+  '.kkkkkk...',
+]
+
+export const STEAM: Grid = [
+  '..s..s....',
+  '...s..s...',
+  '..s..s....',
+]
+
 export const AVATAR: Grid = [
   '..hhhhhh..',
   '.hhhhhhhh.',

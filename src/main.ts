@@ -6,7 +6,7 @@ import { installParallax } from './scene/parallax.ts'
 import { santaSvg } from './scene/santa.ts'
 import { installDance } from './scene/village.ts'
 import { skylineSvg, starsSvg } from './scene/skyline.ts'
-import { PAL, SANTA_HAT } from './sprites.ts'
+import { COCOA, PAL, SANTA_HAT, STEAM } from './sprites.ts'
 import { sprite } from './pixel.ts'
 import { type State, load, reset, save } from './state.ts'
 import * as pages from './views/pages.ts'
@@ -18,6 +18,7 @@ document.querySelector('#sky-stars')!.innerHTML = starsSvg()
 document.querySelector('#sky-line')!.innerHTML = skylineSvg()
 document.querySelector('#sky-santa .sleigh')!.innerHTML = santaSvg()
 document.querySelector('.santa-hat')!.innerHTML = sprite(SANTA_HAT, PAL)
+document.querySelector('.cocoa')!.innerHTML = sprite(STEAM, PAL, 'class="steam"') + sprite(COCOA, PAL)
 
 let state: State = load()
 let rendered = ''
