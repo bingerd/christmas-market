@@ -1,15 +1,14 @@
-import { LOCATIONS, SERVICE_LINES } from './config.ts'
+import { LOCATIONS } from './config.ts'
 import { type Pick, sanitize } from './pick.ts'
 
 export interface State {
   pick: Pick | null
-  serviceLine: string
   location: string
 }
 
 const KEY = 'xebia-kerstmarkt-v2'
 
-const initial = (): State => ({ pick: null, serviceLine: '', location: '' })
+const initial = (): State => ({ pick: null, location: '' })
 
 export const load = (): State => {
   try {
@@ -17,7 +16,6 @@ export const load = (): State => {
     if (!raw) return initial()
     return {
       pick: sanitize(raw.pick),
-      serviceLine: SERVICE_LINES.includes(raw.serviceLine) ? raw.serviceLine : '',
       location: LOCATIONS.includes(raw.location) ? raw.location : '',
     }
   } catch {

@@ -1,14 +1,13 @@
-import { type Pick, label, resolve } from './pick.ts'
+import { type Pick, formLabel, resolve } from './pick.ts'
 
 export interface FormConfig {
   url: string
-  fields: { type: string; choice: string; serviceLine: string; location: string }
+  fields: { type: string; choice: string; location: string }
   typeLabels: Record<Pick['kind'], string>
   noDeliveryLabel: string
 }
 
 export interface Details {
-  serviceLine: string
   location: string
 }
 
@@ -23,8 +22,7 @@ export const buildFormUrl = (config: FormConfig, details: Details, pick: Pick | 
   const quoted = (value: string) => `"${value}"`
   const answers: [string, string][] = [
     [config.fields.type, quoted(config.typeLabels[resolved.kind])],
-    [config.fields.choice, label(resolved)],
-    [config.fields.serviceLine, quoted(details.serviceLine)],
+    [config.fields.choice, formLabel(resolved)],
     [config.fields.location, quoted(resolved.kind === 'present' ? details.location : config.noDeliveryLabel)],
   ]
   const query = answers.map(([field, value]) => `&${field}=${encodeURIComponent(value)}`).join('')

@@ -1527,11 +1527,11 @@ legend {
 }
 .lightbox img {
   display: block;
-  /* as big as fits, leaving room for the caption */
-  width: min(94vw, calc((94svh - 56px) * 4 / 3));
+  /* the whole picture as big as fits, leaving room for the caption;
+     --ar is its own aspect ratio (ui.ts) */
+  width: min(94vw, calc((94svh - 56px) * var(--ar)));
   height: auto;
-  aspect-ratio: 4 / 3;
-  object-fit: contain;
+  aspect-ratio: var(--ar);
 }
 .lightbox figcaption {
   display: flex;

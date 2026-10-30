@@ -29,7 +29,7 @@ gates, so do not skip them.
 
 ## Where things live
 
-- `src/config.ts` — service lines, locations, Form URL + question ids
+- `src/config.ts` — locations, Form URL + question ids
 - `src/catalog.ts` — charities, suppliers and their packages
 - `src/images/` — catalogue pictures (photos per supplier at full resolution,
   pixel-art SVGs), resolved through `import.meta.glob` in `src/views/ui.ts`;

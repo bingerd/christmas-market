@@ -4,8 +4,9 @@ A cozy pixel-art (Habbo Hotel style) Christmas market. Every Xebian picks
 **one** item: a gift package from a local supplier, or a donation to charity.
 Live at <https://christmas.bngrd.com>.
 
-Flow: **landing → present or donate? → market square → stall / giving booth →
-service line + drop-off location → review → confirm in Microsoft Forms.**
+Flow: **landing → present or donate? → market square → stall / giving booth
+(WWF: pick an animal to adopt) → drop-off location (presents only) → review →
+confirm in Microsoft Forms.**
 
 ## How orders are collected
 
@@ -20,8 +21,7 @@ in Forms / Excel like any other form.
    | Question | Type | Options |
    | --- | --- | --- |
    | Type | Choice | `Present`, `Donation` |
-   | Choice | Text | (filled with e.g. `Olala Chocola – Bonbon workshop` or `Donation to WWF`) |
-   | Service line | Choice | exactly the values in `SERVICE_LINES` |
+   | Choice | Text | (filled with the Dutch `formName`, e.g. `Olala Chocola – Workshop bonbons maken` or `WWF – Adopteer een tijger`) |
    | Drop-off location | Choice | exactly the values in `LOCATIONS`, plus `Not applicable (donation)` |
 2. Settings → **Only people in my organisation can respond** and **Record name**.
    That's how the Xebia email is captured and verified, so the site doesn't ask for it.
@@ -38,18 +38,24 @@ everyone really gets one pick.
 
 ## Editing content
 
-- **Service lines, locations:** `src/config.ts`
-- **Charities, suppliers, packages (names, descriptions):** `src/catalog.ts`
+- **Locations:** `src/config.ts`
+- **Charities, WWF animals, suppliers, packages (names, descriptions):**
+  `src/catalog.ts`. The site shows the English `name`; the Form gets the
+  Dutch `formName`, the name the stall itself uses.
 - **The market square scene** (stall positions, LED sign text, people): `src/scene/village.ts`
 - **Pictures:** every entry has an `image` path relative to `src/images/`
-  (`suppliers/<supplier>/<package>.jpg`, `charities/<id>.svg`). Vite bundles
+  (`suppliers/<supplier>/<package>.jpg`, `charities/<id>.svg`,
+  `charities/wwf/<animal>.jpg`). Vite bundles
   them with hashed filenames, and `npm test` fails if one is missing. Photos
   are 4:3 JPEGs at full resolution in sRGB (crop them first: cards are 4:3
   and get center-cropped). The build turns each into a range of widths up to
   the original (`vite-imagetools`, see `vite.config.ts`), so every screen
-  downloads only the size it needs. An entry without a photo can point at a
-  pixel-art `.svg`: `node scripts/make-placeholders.ts` generates any missing
-  ones (never overwrites existing files unless you pass `--force`).
+  downloads only the size it needs. Clicking a package photo shows the
+  uncropped original when there is one at `suppliers/<supplier>/full/<same
+  name>.jpg` (strip its metadata first: phone photos carry GPS). An entry
+  without a photo can point at a pixel-art `.svg`:
+  `node scripts/make-placeholders.ts` generates any missing ones (never
+  overwrites existing files unless you pass `--force`).
 - **Package ids** are `<supplier>-<slug>` and are what a pick is stored as, so
   keep a slug when you only reword a package.
 

@@ -37,7 +37,7 @@ const formUrl = () => {
   }
 }
 
-const detailsComplete = () => !!state.serviceLine && (!needsDelivery(state.pick) || !!state.location)
+const detailsComplete = () => !needsDelivery(state.pick) || !!state.location
 
 const redirect = (path: string) => {
   queueMicrotask(() => location.replace(`#${path}`))
@@ -54,9 +54,10 @@ const view = ([page, id]: string[]): string => {
     case 'stall':
       return pages.stall(state, id ?? '') ?? pages.notFound()
     case 'donate':
-      return pages.donate(state)
+      return id ? (pages.adopt(state, id) ?? pages.notFound()) : pages.donate(state)
     case 'details':
-      return pages.details(state) ?? redirect('/choose')
+      // donations have nothing to fill in
+      return pages.details(state) ?? redirect(state.pick ? '/review' : '/choose')
     case 'review':
       if (!detailsComplete()) return redirect('/details')
       return pages.review(state, formUrl()) ?? redirect('/choose')
@@ -125,9 +126,9 @@ app.addEventListener('click', (e) => {
     case 'pick-present':
       return update({ ...state, pick: { kind: 'present', id } }, '#/details')
     case 'pick-donate':
-      return update({ ...state, pick: { kind: 'donate', id } }, '#/details')
+      return update({ ...state, pick: { kind: 'donate', id } }, '#/review')
     case 'zoom':
-      return enlarge(el.querySelector('img')!)
+      return enlarge(el.querySelector('img')!, id)
     case 'reset':
       state = reset()
       location.hash = '#/'
@@ -139,15 +140,13 @@ app.addEventListener('submit', (e) => {
   const form = e.target as HTMLFormElement
   if (form.dataset.form !== 'details') return
   e.preventDefault()
-  const data = new FormData(form)
-  const serviceLine = String(data.get('serviceLine') ?? '')
-  const location_ = data.get('location')
-  state = { ...state, serviceLine, location: location_ === null ? state.location : String(location_) }
+  const location_ = new FormData(form).get('location')
+  state = { ...state, location: location_ === null ? state.location : String(location_) }
   save(state)
   const error = form.querySelector<HTMLElement>('.error')!
   if (!detailsComplete()) {
     error.hidden = false
-    error.textContent = !serviceLine ? 'Pick your service line.' : 'Pick a drop-off location.'
+    error.textContent = 'Pick a drop-off location.'
     return
   }
   location.hash = '#/review'

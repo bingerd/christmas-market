@@ -1,7 +1,5 @@
 // Everything you are likely to tweak lives here.
 
-export const SERVICE_LINES = ['Xebia Data', 'Xebia Cloud']
-
 export const LOCATIONS = ['Oostenburg', 'Hilversum', 'Eindhoven']
 
 /**
@@ -16,7 +14,6 @@ export const FORM_URL =
 export const FORM_FIELDS = {
   type: 'r216c11cc9c874799ad9918ce6b9f2e38',
   choice: 'r0f7cebee6763497084d16823c9bd52bb',
-  serviceLine: 'r7752664f82764904bac18f16d7266bfb',
   location: 'r8a4bf3d8faa840c5a467830b911cae9a',
 }
 

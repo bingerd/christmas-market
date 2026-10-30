@@ -5,7 +5,7 @@ export type Pick = { kind: 'present'; id: string } | { kind: 'donate'; id: strin
 
 export type Resolved =
   | { kind: 'present'; pkg: Package; supplier: Supplier }
-  | { kind: 'donate'; charity: Charity }
+  | { kind: 'donate'; charity: Charity; animal?: Package }
 
 export const resolve = (pick: Pick | null): Resolved | null => {
   if (!pick) return null
@@ -13,13 +13,20 @@ export const resolve = (pick: Pick | null): Resolved | null => {
     const found = findPackage(pick.id)
     return found ? { kind: 'present', ...found } : null
   }
-  const charity = findCharity(pick.id)
-  return charity ? { kind: 'donate', charity } : null
+  const found = findCharity(pick.id)
+  return found ? { kind: 'donate', ...found } : null
 }
 
-/** Human readable, also what ends up in the Form. */
-export const label = (r: Resolved) =>
-  r.kind === 'present' ? `${r.supplier.name} – ${r.pkg.name}` : `Donation to ${r.charity.name}`
+const describe = (r: Resolved, name: 'name' | 'formName') => {
+  if (r.kind === 'present') return `${r.supplier.name} – ${r.pkg[name]}`
+  return r.animal ? `${r.charity.name} – ${r.animal[name]}` : `Donation to ${r.charity.name}`
+}
+
+/** Human readable, in English. */
+export const label = (r: Resolved) => describe(r, 'name')
+
+/** What ends up in the Form: the Dutch names the stalls know their products by. */
+export const formLabel = (r: Resolved) => describe(r, 'formName')
 
 export const needsDelivery = (pick: Pick | null) => resolve(pick)?.kind === 'present'
 

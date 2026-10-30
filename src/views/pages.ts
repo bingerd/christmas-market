@@ -1,5 +1,5 @@
-import { charities, suppliers } from '../catalog.ts'
-import { FORM_URL, LOCATIONS, SERVICE_LINES } from '../config.ts'
+import { type Package, charities, suppliers } from '../catalog.ts'
+import { FORM_URL, LOCATIONS } from '../config.ts'
 import { type Grid, sprite } from '../pixel.ts'
 import { type Pick, type Resolved, label, needsDelivery, resolve } from '../pick.ts'
 import { givingScene, marketScene } from '../scene/gates.ts'
@@ -11,6 +11,20 @@ import { esc, panel, photo, steps } from './ui.ts'
 const icon = (grid: Grid, cls = 'icon') => `<span class="${cls}" aria-hidden="true">${sprite(grid, PAL)}</span>`
 
 const isPicked = (pick: Pick | null, kind: Pick['kind'], id: string) => pick?.kind === kind && pick.id === id
+
+/** A package at a stall, or an animal to adopt: photo (click to enlarge), text and a pick button. */
+const offer = (state: State, kind: Pick['kind'], p: Package, cta: string) => {
+  const picked = isPicked(state.pick, kind, p.id)
+  return `<article class="offer ${picked ? 'picked' : ''}">
+    <button class="offer-img zoom" data-action="zoom" data-id="${esc(p.image)}" aria-label="Enlarge the photo of ${esc(p.name)}">${photo(p.image, p.name)}${icon(MAGNIFIER, 'zoom-badge')}</button>
+    <div class="offer-body">
+      <h2>${esc(p.name)}</h2>
+      <p>${esc(p.description)}</p>
+      <button class="btn ${picked ? 'btn-picked' : 'btn-primary'}" data-action="pick-${kind}" data-id="${p.id}">
+        ${picked ? 'Your pick ✓' : cta}</button>
+    </div>
+  </article>`
+}
 
 // --- home ----------------------------------------------------------------------
 
@@ -94,22 +108,7 @@ export const stall = (state: State, id: string) => {
         <a href="#/stall/${next.id}">${esc(next.name)} →</a>
       </nav>
     </aside>
-    <div class="offers">
-      ${s.packages
-        .map((p) => {
-          const picked = isPicked(state.pick, 'present', p.id)
-          return `<article class="offer ${picked ? 'picked' : ''}">
-            <button class="offer-img zoom" data-action="zoom" aria-label="Enlarge the photo of ${esc(p.name)}">${photo(p.image, p.name)}${icon(MAGNIFIER, 'zoom-badge')}</button>
-            <div class="offer-body">
-              <h2>${esc(p.name)}</h2>
-              <p>${esc(p.description)}</p>
-              <button class="btn ${picked ? 'btn-picked' : 'btn-primary'}" data-action="pick-present" data-id="${p.id}">
-                ${picked ? 'Your pick ✓' : 'Pick this present'}</button>
-            </div>
-          </article>`
-        })
-        .join('')}
-    </div>
+    <div class="offers">${s.packages.map((p) => offer(state, 'present', p, 'Pick this present')).join('')}</div>
   </div>`
 }
 
@@ -126,7 +125,12 @@ export const donate = (state: State) => `
     <div class="charities">
       ${charities
         .map((c) => {
-          const picked = isPicked(state.pick, 'donate', c.id)
+          const picked = state.pick?.kind === 'donate' && (c.animals ?? [c]).some((x) => x.id === state.pick?.id)
+          // a charity with animals sends you to choose one first
+          const button = c.animals
+            ? `<a class="btn ${picked ? 'btn-picked' : 'btn-primary'}" href="#/donate/${c.id}">${picked ? 'Your pick ✓' : 'Choose an animal'}</a>`
+            : `<button class="btn ${picked ? 'btn-picked' : 'btn-primary'}" data-action="pick-donate" data-id="${c.id}">
+                ${picked ? 'Your pick ✓' : `Donate to ${esc(c.name)}`}</button>`
           return `<article class="offer charity ${picked ? 'picked' : ''}">
             <div class="offer-img">${photo(c.image, c.name)}</div>
             <div class="offer-body">
@@ -134,8 +138,7 @@ export const donate = (state: State) => `
               <h2>${esc(c.name)}</h2>
               <p>${esc(c.description)}</p>
               ${c.url ? `<p><a class="link" href="${esc(c.url)}" target="_blank" rel="noopener">About ${esc(c.name)} ↗</a></p>` : ''}
-              <button class="btn ${picked ? 'btn-picked' : 'btn-primary'}" data-action="pick-donate" data-id="${c.id}">
-                ${picked ? 'Your pick ✓' : `Donate to ${esc(c.name)}`}</button>
+              ${button}
             </div>
           </article>`
         })
@@ -144,11 +147,30 @@ export const donate = (state: State) => `
     <p class="aside-link"><a href="#/market">← Rather have a present? Back to the market</a></p>
   </section>`
 
+/** The animals of a charity, laid out like a stall. */
+export const adopt = (state: State, id: string) => {
+  const c = charities.find((c) => c.id === id)
+  if (!c?.animals) return null
+  return `
+  ${steps(1)}
+  <div class="stall-page" style="--glow:#e5007d">
+    <aside class="stall-side">
+      <a class="back" href="#/donate">← Giving booth</a>
+      <div class="stall-photo-frame">${photo(c.image, c.name, 'stall-photo')}</div>
+      <p class="eyebrow">${esc(c.tagline)}</p>
+      <h1>${esc(c.name)}</h1>
+      <p class="stall-desc">${esc(c.description)}</p>
+      ${c.url ? `<p class="stall-hop"><a href="${esc(c.url)}" target="_blank" rel="noopener">About ${esc(c.name)} ↗</a></p>` : ''}
+    </aside>
+    <div class="offers">${c.animals.map((a) => offer(state, 'donate', a, 'Adopt this one')).join('')}</div>
+  </div>`
+}
+
 // --- details & review ----------------------------------------------------------
 
 const pickSummary = (r: Resolved) => {
-  const img = r.kind === 'present' ? r.pkg.image : r.charity.image
-  const change = r.kind === 'present' ? `#/stall/${r.supplier.id}` : '#/donate'
+  const img = r.kind === 'present' ? r.pkg.image : (r.animal ?? r.charity).image
+  const change = r.kind === 'present' ? `#/stall/${r.supplier.id}` : r.animal ? `#/donate/${r.charity.id}` : '#/donate'
   return `<div class="pick-summary">
     ${photo(img, '', 'pick-thumb')}
     <div><p class="eyebrow">${r.kind === 'present' ? 'Your present' : 'Your donation'}</p><strong>${esc(label(r))}</strong></div>
@@ -159,26 +181,18 @@ const pickSummary = (r: Resolved) => {
 const choice = (name: string, value: string, checked: boolean) =>
   `<label class="choice"><input type="radio" name="${name}" value="${esc(value)}" ${checked ? 'checked' : ''}><span>${esc(value)}</span></label>`
 
+/** Only presents have details to fill in: where to drop them off. */
 export const details = (state: State) => {
   const r = resolve(state.pick)
-  if (!r) return null
-  const delivery = needsDelivery(state.pick)
+  if (!r || !needsDelivery(state.pick)) return null
   return `${steps(2)}${panel(
-    `<h1>A couple of details</h1>
+    `<h1>One more detail</h1>
     ${pickSummary(r)}
     <form data-form="details" novalidate>
       <fieldset>
-        <legend>Your service line</legend>
-        <div class="choices">${SERVICE_LINES.map((s) => choice('serviceLine', s, state.serviceLine === s)).join('')}</div>
-      </fieldset>
-      ${
-        delivery
-          ? `<fieldset>
         <legend>Where should we drop off your present?</legend>
         <div class="choices">${LOCATIONS.map((l) => choice('location', l, state.location === l)).join('')}</div>
-      </fieldset>`
-          : ''
-      }
+      </fieldset>
       <p class="hint">No need to fill in your email. You'll sign in with your Xebia account in the last step, and that's how we know it's you.</p>
       <p class="error" role="alert" hidden></p>
       <div class="actions"><button class="btn btn-primary" type="submit">Review my pick</button></div>
@@ -193,10 +207,7 @@ export const review = (state: State, formUrl: string | null) => {
   return `${steps(3)}${panel(
     `<h1>All set?</h1>
     ${pickSummary(r)}
-    <dl class="facts">
-      <dt>Service line</dt><dd>${esc(state.serviceLine)}</dd>
-      ${r.kind === 'present' ? `<dt>Drop-off</dt><dd>${esc(state.location)}</dd>` : ''}
-    </dl>
+    ${r.kind === 'present' ? `<dl class="facts"><dt>Drop-off</dt><dd>${esc(state.location)}</dd></dl>` : ''}
     ${
       formUrl
         ? `<p class="hint">Last step: Microsoft Forms opens with your answers already filled in. Sign in with your Xebia account and press <strong>Submit</strong>. Nothing is ordered until you do.</p>
@@ -204,7 +215,7 @@ export const review = (state: State, formUrl: string | null) => {
         : `<p class="hint warn">The order form isn't connected yet${FORM_URL ? '' : ' (FORM_URL is empty in src/config.ts)'}. Check back soon!</p>`
     }
     <div class="actions split">
-      <a class="link" href="#/details">← Edit details</a>
+      ${r.kind === 'present' ? '<a class="link" href="#/details">← Edit details</a>' : '<span></span>'}
       <button class="link" data-action="reset">Start over</button>
     </div>`,
     'narrow',
