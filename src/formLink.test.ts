@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { charities, suppliers } from './catalog.ts'
+import { FORM_FIELDS, FORM_TYPE_LABELS, FORM_URL, NO_DELIVERY_LABEL } from './config.ts'
 import { type FormConfig, buildFormUrl } from './formLink.ts'
+import type { Pick } from './pick.ts'
 
 const config: FormConfig = {
   url: 'https://forms.office.com/Pages/ResponsePage.aspx?id=ABC',
@@ -40,5 +43,43 @@ describe('buildFormUrl', () => {
     expect(url).toContain("r2=De%20Magistraat%20%E2%80%93%20Bierpakket%20met%20extra's")
     expect(url).not.toContain('+')
     expect(buildFormUrl(config, { location: '' }, null)).toBeNull()
+  })
+})
+
+// Orders are fulfilled from the Form's responses, so every pick must arrive
+// there as an answer that names exactly one thing.
+describe('every pick in the catalogue, through the real Form config', () => {
+  const real: FormConfig = { url: FORM_URL, fields: FORM_FIELDS, typeLabels: FORM_TYPE_LABELS, noDeliveryLabel: NO_DELIVERY_LABEL }
+  const picks: Pick[] = [
+    ...suppliers.flatMap((s) => s.packages.map((p) => ({ kind: 'present' as const, id: p.id }))),
+    // a charity with animals is adopted from, not donated to directly
+    ...charities.flatMap((c) => (c.animals ?? [c]).map((a) => ({ kind: 'donate' as const, id: a.id }))),
+  ]
+  const answers = picks.map((pick) => {
+    const url = buildFormUrl(real, { location: 'Hilversum' }, pick)
+    return url ? params(url).get(FORM_FIELDS.choice) : null
+  })
+
+  it('gets a Form link with an answer for each', () => {
+    expect(picks.filter((_, i) => !answers[i])).toEqual([])
+  })
+
+  it('names each pick differently', () => {
+    expect(new Set(answers).size).toBe(picks.length)
+  })
+
+  it('names each pick differently to someone reading the responses', () => {
+    // ignoring case, how accents are encoded, dash and quote styles and spacing
+    const loose = (s: string) =>
+      s.normalize('NFKC').toLowerCase().replace(/[\u2010-\u2015\u2212]/g, '-').replace(/[\u2018\u2019`\u00b4]/g, "'").replace(/\s+/g, ' ').trim()
+    expect(new Set(answers.map((a) => loose(a!))).size).toBe(picks.length)
+  })
+
+  it('writes every answer cleanly', () => {
+    for (const a of answers) {
+      expect(a, a!).toBe(a!.normalize('NFC'))
+      expect(a, a!).toBe(a!.trim())
+      expect(a, a!).not.toMatch(/\s{2}/)
+    }
   })
 })

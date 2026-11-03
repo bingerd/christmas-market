@@ -174,12 +174,18 @@ export const suppliers: Supplier[] = [
     id: 'libris-voorhoeve',
     name: 'Libris Voorhoeve',
     kind: 'Bookshop',
-    description: "Bookshop on the Kerkstraat in Hilversum, part of Libris, a group of independent Dutch bookshops. Besides books you'll find gifts, magazines and cards, and a coffee corner with a terrace out front. Pick a gift card and choose your own book.",
+    description: "Bookshop on the Kerkstraat in Hilversum, part of Libris, a group of independent Dutch bookshops. Besides books you'll find gifts, magazines and cards, and a coffee corner with a terrace out front. Pick one of seven cookbooks, or a gift card to choose your own book.",
     image: 'suppliers/libris-voorhoeve/stall.svg',
     color: '#e07b2a',
-    // placeholder until their packages and photos come in
     packages: stock('libris-voorhoeve', [
-      ['gift-card', 'Gift card', 'Cadeaukaart', 'Spend it at Boekhandel Voorhoeve in Hilversum, on books, gifts or cards.', 'gift-card.svg'],
+      ['caron-a-la-maison', 'Caron à la maison', 'Caron à la maison – Alain Caron', 'Paris-born chef Alain Caron shares how his family cooks at home: big platters and pots to share at the table, with vegetables in the leading role and plenty of fish and shellfish. Think a tarte tatin of chicory, or leeks with sabayon and potatoes. In Dutch.'],
+      ['jamie-in-20-minuten', 'Jamie in 20 minuten', 'Jamie in 20 minuten – Jamie Oliver', "The Dutch edition of Jamie Oliver's 20 Minute Meals: 120 recipes, each on the table in 20 minutes, with no more than 10 ingredients you'll find in any supermarket. Pasta, rice and noodles, beans, salads, fish, eggs and soups, with plenty of vegetables. In Dutch."],
+      ['lievelings', 'Lievelings', 'Lievelings, recepten die je keer op keer blijft maken – Janneke Vreugdenhil', 'More than 150 recipes that food writer Janneke Vreugdenhil makes again and again: dishes from her favourite restaurants, like a Spanish tortilla, and dishes full of memories, like buttery mashed potatoes. Easy to make at home, with lots of vegetables. In Dutch.'],
+      ['ottolenghi-simple-too', 'Ottolenghi Simple Too', 'Ottolenghi Simple Too – Yotam Ottolenghi', "Yotam Ottolenghi's follow-up to his bestseller Simple: 135 new recipes for breakfast, lunch, dinner and dessert, each one made in under 30 minutes, cooked in one pot or prepped ahead. In English."],
+      ['piens-dinner-club', "Pien's Dinner Club", "Pien's Dinner Club – Pien Wekking", 'A handbook for hosting your own dinner club, by Pien Wekking. Comfort recipes from brunch, snacks and starters to mains, desserts and cocktails, plus complete menus and practical hosting tips, right down to the dishwasher. In Dutch.'],
+      ['stoven', 'Stoven', 'Stoven – Meer dan 100 langzaam gegaarde recepten vol smaak – Julius Jaspers', 'More than 100 slow-cooked recipes from chef Julius Jaspers, the follow-up to his Stoofbijbel: classics like boeuf bourguignon and blanquette de veau, and new ones like lapskaus with smoked eel. Made to cook a day ahead and warm up when your guests arrive. In Dutch.'],
+      ['veggilaine-seizoenen', 'Veggilaine voor ieder seizoen', 'Veggilaine, voor ieder seizoen – Ghislaine Voogd', "More than 85 vegetarian recipes by Ghislaine Voogd, known online as Veggilaine, arranged by season: fresh, light dishes for summer and comfort food for winter, with a calendar of what's in season when. In Dutch."],
+      ['gift-card', 'Gift card', 'Cadeaukaart €35', 'Worth €35, to spend at Libris Voorhoeve in Hilversum, on books, gifts or cards.'],
     ]),
   },
 ]
