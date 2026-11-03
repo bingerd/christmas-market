@@ -100,6 +100,19 @@ export const POT: Grid = [
   '...kkkkkk...',
 ]
 
+export const BOOKS: Grid = [
+  '..kkkkkkkkk.',
+  '..krryyyrRk.',
+  '..krrrrrrRk.',
+  '.kkkkkkkkkkk',
+  '.kPPPyyyPPpk',
+  '.kPPPPPPPPpk',
+  'kkkkkkkkkkk.',
+  'kgggyyyggGk.',
+  'kggggggggGk.',
+  'kkkkkkkkkkk.',
+]
+
 /** Badge on photos you can enlarge. */
 export const MAGNIFIER: Grid = [
   '..kkkk......',
@@ -196,6 +209,7 @@ export const productFor: Record<string, Grid> = {
   alexanderhoeve: CHEESE,
   'olala-chocola': CHOCOLATE,
   gastrovino: WINE,
+  'libris-voorhoeve': BOOKS,
 }
 
 const width = (g: Grid) => Math.max(...g.map((r) => r.length))

@@ -170,6 +170,18 @@ export const suppliers: Supplier[] = [
       ['gift-card', 'Gift card', 'Cadeaubon', 'Spend it at the Mijn Hemel wine shop in Hilversum, on wines from small growers, delicatessen or gifts.'],
     ]),
   },
+  {
+    id: 'libris-voorhoeve',
+    name: 'Libris Voorhoeve',
+    kind: 'Bookshop',
+    description: "Bookshop on the Kerkstraat in Hilversum, part of Libris, a group of independent Dutch bookshops. Besides books you'll find gifts, magazines and cards, and a coffee corner with a terrace out front. Pick a gift card and choose your own book.",
+    image: 'suppliers/libris-voorhoeve/stall.svg',
+    color: '#e07b2a',
+    // placeholder until their packages and photos come in
+    packages: stock('libris-voorhoeve', [
+      ['gift-card', 'Gift card', 'Cadeaukaart', 'Spend it at Boekhandel Voorhoeve in Hilversum, on books, gifts or cards.', 'gift-card.svg'],
+    ]),
+  },
 ]
 
 export const findPackage = (id: string) => {

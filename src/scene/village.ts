@@ -94,7 +94,7 @@ const pool = (x: number, y: number, rx = 46, ry = 18, color = 'warm') => {
 
 // --- shopkeepers ------------------------------------------------------------------
 
-type Job = 'slice' | 'pour' | 'tap' | 'stir' | 'pack' | 'wave'
+type Job = 'slice' | 'pour' | 'tap' | 'stir' | 'pack' | 'read' | 'wave'
 
 const JOBS: Record<string, Job> = {
   'de-magistraat': 'tap',
@@ -102,6 +102,7 @@ const JOBS: Record<string, Job> = {
   alexanderhoeve: 'slice',
   'olala-chocola': 'stir',
   gastrovino: 'pour',
+  'libris-voorhoeve': 'read',
 }
 
 const LOOKS: Record<Job, { shirt: string; hair: string }> = {
@@ -110,6 +111,7 @@ const LOOKS: Record<Job, { shirt: string; hair: string }> = {
   tap: { shirt: '#3d9be0', hair: '#1b1028' },
   stir: { shirt: '#7b4a2d', hair: '#3b2416' },
   pack: { shirt: '#2b6cb0', hair: '#7a3b12' },
+  read: { shirt: '#1f8a80', hair: '#e8c170' },
   wave: { shirt: '#e5007d', hair: '#3b2416' },
 }
 
@@ -172,6 +174,15 @@ const PROPS: Record<Job, (a: number, c: number) => string> = {
       px(a + 3, c - 6, 2, 2, '#c8102e') + px(a + 5, c - 5, 3, 1, '#c98a00'),
       1.2,
     ),
+  // an open book on a stand, a page turning now and then
+  read: (a, c) =>
+    px(a - 10, c - 8, 12, 7, '#c8102e') +
+    px(a - 9, c - 7, 4, 5, '#fff4e6') +
+    px(a - 4, c - 7, 4, 5, '#fff4e6') +
+    [c - 6, c - 4].map((y) => px(a - 8, y, 2, 1, '#b3a58f') + px(a - 3, y, 2, 1, '#b3a58f')).join('') +
+    px(a - 5, c - 8, 1, 7, '#8b0a1f') +
+    px(a - 8, c - 1, 8, 1, WOOD_DEEP) +
+    frames(px(a - 4, c - 7, 4, 5, '#fff4e6') + px(a - 3, c - 5, 2, 1, '#b3a58f'), px(a - 5, c - 12, 2, 6, '#ffffff') + px(a - 5, c - 12, 1, 6, '#e6dccb'), 1.4),
   wave: (a, c) =>
     frames(
       px(a - 8, c - 18, 1, 6, LOOKS.wave.shirt) + px(a - 9, c - 21, 2, 3, '#f5c7a1'),
@@ -249,20 +260,27 @@ interface StallOpts {
   extra?: (x: number, y: number) => string
   /** Shopkeeper standing behind the counter, doing their job. */
   keeper?: Job
+  /** No back wall or shelves: a table under an awning on four posts, with piles of `goods` on it. */
+  open?: boolean
 }
 
 /**
  * A 2×1 market stall. Drawn facing +y; a stall facing +x is the same drawing
  * on swapped tile coordinates, mirrored around the room's centre line.
  */
-const stall = ({ x: tx, y: ty, color, icon, name, href, goods = [color], facing = 'y', extra, keeper: job }: StallOpts) => {
+const stall = ({ x: tx, y: ty, color, icon, name, href, goods = [color], facing = 'y', extra, keeper: job, open = false }: StallOpts) => {
   const mirrored = facing === 'x'
   const [x, y] = mirrored ? [ty, tx] : [tx, ty]
   let g = ''
-  // back wall with warm lit interior
-  g += box(x, y, 2, 0.15, 0, 30, WOOD_DARK, 'url(#interior)', WOOD_DEEP)
+  // back posts carrying the awning, or a back wall with warm lit interior
+  if (open)
+    for (const bx of [x, x + 2]) {
+      const [a, b] = at(bx, y + 0.1)
+      g += `<rect x="${a - 1}" y="${b - 32}" width="2" height="32" fill="${WOOD_DEEP}"/>`
+    }
+  else g += box(x, y, 2, 0.15, 0, 30, WOOD_DARK, 'url(#interior)', WOOD_DEEP)
   // shelves with goods
-  for (const z of [12, 21]) {
+  for (const z of open ? [] : [12, 21]) {
     const [a0, b0] = at(x + 0.1, y + 0.15, z)
     const [a1, b1] = at(x + 1.9, y + 0.15, z)
     g += `<polygon points="${a0},${b0} ${a1},${b1} ${a1},${b1 + 1.5} ${a0},${b0 + 1.5}" fill="${WOOD}"/>`
@@ -285,6 +303,11 @@ const stall = ({ x: tx, y: ty, color, icon, name, href, goods = [color], facing 
   if (!job)
     for (let i = 0; i < 3; i++)
       g += box(x + 0.2 + i * 0.6, y + 0.72, 0.3, 0.22, 12, 15, goods[i % goods.length], '#1b1028', '#1b1028')
+  // piles on the open table, either side of the shopkeeper
+  if (open)
+    for (const [side, sx] of [x + 0.08, x + 1.52].entries())
+      for (let i = 0; i < 3; i++)
+        g += box(sx + (i % 2) * 0.04, y + 0.7, 0.4, 0.24, 12 + i * 2, 14 + i * 2, goods[(i + side) % goods.length], '#fff4e6', '#1b1028')
   g += kept?.props ?? ''
   // posts
   for (const [px, py] of [[x, y + 1], [x + 2, y + 1]] as const) {
@@ -526,13 +549,19 @@ export interface VillageOpts {
 
 // Stalls line the two back edges of the square like furniture along Habbo
 // room walls, leaving the middle and front open for the tree and people.
-const STALL_SPOTS: Array<{ x: number; y: number; facing: 'x' | 'y' }> = [
+// The walls are full, so the bookshop is an open table out on the front-left
+// path: without a back wall it doesn't hide the stalls behind it.
+const STALL_SPOTS: Array<{ x: number; y: number; facing: 'x' | 'y'; open?: boolean }> = [
   { x: 2.2, y: 0.4, facing: 'y' },
   { x: 0.4, y: 2.2, facing: 'x' },
   { x: 5.6, y: 0.4, facing: 'y' },
   { x: 0.4, y: 5.6, facing: 'x' },
   { x: 0.4, y: 9, facing: 'x' },
+  { x: 4.6, y: 9.8, facing: 'y', open: true },
 ]
+
+/** Book spines for the piles on an open table. */
+const SPINES = ['#c8102e', '#6c1d7f', '#2e7d4f', '#ffd23f']
 
 /** Light pool in front of a stall's open side. */
 const stallPool = (x: number, y: number, facing: 'x' | 'y', rx = 40, ry = 16) =>
@@ -543,7 +572,7 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
   const pools: string[] = []
 
   suppliers.slice(0, STALL_SPOTS.length).forEach((s, i) => {
-    const { x, y, facing } = STALL_SPOTS[i]
+    const { x, y, facing, open } = STALL_SPOTS[i]
     pools.push(stallPool(x, y, facing))
     items.push({
       depth: x + y + 2,
@@ -551,6 +580,8 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
         x,
         y,
         facing,
+        open,
+        goods: open ? SPINES : undefined,
         color: s.color,
         icon: productFor[s.id],
         keeper: JOBS[s.id],
@@ -579,12 +610,12 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
   pools.push(pool(6.5, 6.5, 64, 28))
   items.push({ depth: 13, svg: tree(6.5, 6.5) })
   items.push({ depth: 1, svg: ledSign(0.9, 0.9, 'XEBIA CHRISTMAS MARKET   *   ONE GIFT EACH   *   2026') })
-  items.push({ depth: 13.2, svg: lamp(3.4, 9.8) })
+  // one lamp: the bookshop's table lights the front-left corner
   items.push({ depth: 13.2, svg: lamp(9.8, 3.4) })
-  pools.push(pool(3.4, 9.8, 24, 10), pool(9.8, 3.4, 24, 10))
+  pools.push(pool(9.8, 3.4, 24, 10))
 
   items.push({ depth: 9.6, svg: person(5.4, 4.2, '#6c1d7f', '#3b2416', 'walker w1') })
-  items.push({ depth: 12.6, svg: person(4.2, 8.4, '#c8102e', '#e8c170', 'walker w2', true) })
+  items.push({ depth: 9, svg: person(3, 6, '#c8102e', '#e8c170', 'walker w2', true) })
   // the fire pit in the open front of the square, with people warming up
   pools.push(pool(9.2, 9.2, 96, 42, 'fire'))
   items.push({ depth: 18.4, svg: firePit(9.2, 9.2) })
@@ -597,7 +628,8 @@ export const villageSvg = ({ interactive = false }: VillageOpts = {}) => {
   // (beside the stalls: in front of a counter they'd hide the shopkeeper)
   items.push({ depth: 6, svg: person(4.5, 1.5, '#ffd23f', '#1b1028', 'shopper') })
   items.push({ depth: 9.9, svg: person(8.3, 1.6, '#2e7d4f', '#7a3b12', 'shopper', true) })
-  items.push({ depth: 15.6, svg: dog(5.6, 8) })
+  // (trotting past the bookshop's table, not into it)
+  items.push({ depth: 16.6, svg: dog(6.85, 7.2) })
 
   items.push({ depth: 19.7, svg: snowman(11.4, 8.3) })
   for (const [x, y, w] of [[11.4, 2.4, 22], [2.4, 11.4, 22], [0.8, 8.3, 16], [8.3, 0.8, 16], [11.3, 11.2, 26]] as const)
