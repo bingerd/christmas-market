@@ -164,8 +164,8 @@ export const suppliers: Supplier[] = [
     image: 'suppliers/gastrovino/stall.svg',
     color: '#9b2335',
     packages: stock('gastrovino', [
-      ['white-wine', 'Fantasia Zibibbo', 'Baglio Diar – Fantasia Zibibbo', 'One bottle from Baglio DiAr, an organic and vegan family winery near Marsala in Sicily. A dry, aromatic white from Zibibbo grapes with peach, rose petals and orange peel. Lovely as an aperitif.'],
-      ['red-wine', "Nedda Nero d'Avola", "Baglio Diar – Nedda Nero d'Avola", "One bottle from Baglio DiAr in Sicily, organic. A smooth, juicy Nero d'Avola with blueberry, blackberry and a hint of spice, aged five months in oak. Great with pasta, pizza or stews."],
+      ['white-wine', 'Fantasia Zibibbo', 'Baglio Diar – Fantasia Zibibbo', 'Two bottles from Baglio DiAr, an organic and vegan family winery near Marsala in Sicily. A dry, aromatic white from Zibibbo grapes with peach, rose petals and orange peel. Lovely as an aperitif.'],
+      ['red-wine', "Nedda Nero d'Avola", "Baglio Diar – Nedda Nero d'Avola", "Two bottles from Baglio DiAr in Sicily, organic. A smooth, juicy Nero d'Avola with blueberry, blackberry and a hint of spice, aged five months in oak. Great with pasta, pizza or stews."],
       ['alcohol-free', 'Alcohol-free duo', 'Franc Lizêr – Rosso 0% en Bianco 0%', 'Two bottles from Franc Lizêr, the alcohol-free label of a Friulian winery: Rosso 0%, a full Merlot with cherry and raspberry, and Bianco 0%, a fresh Pinot Grigio with apple and peach. Made as real wine, then the alcohol is gently removed.'],
       ['gift-card', 'Gift card', 'Cadeaubon', 'Spend it at the Mijn Hemel wine shop in Hilversum, on wines from small growers, delicatessen or gifts.'],
     ]),
