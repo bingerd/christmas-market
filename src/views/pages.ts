@@ -35,6 +35,7 @@ export const home = () => `
       <p class="eyebrow">Winter 2026</p>
       <h1 id="hero-title">Welcome to the <em>Xebia Christmas Market</em></h1>
       <p class="hero-lead">Wander past the stalls of local makers. Pick one gift for yourself, or give it to a good cause.</p>
+      <p class="hero-countdown"><span class="eyebrow">The market closes in</span><strong data-countdown></strong></p>
       <a class="btn btn-primary" href="#/choose">Enter the market</a>
     </div>
     <a class="scroll-cue" href="#/choose" aria-label="Scroll to the market entrance"><span></span></a>
@@ -221,6 +222,17 @@ export const review = (state: State, formUrl: string | null) => {
     'narrow',
   )}`
 }
+
+/** Shown on every page once CLOSES_AT has passed. */
+export const closed = () => `
+  <section class="hero closed" aria-labelledby="closed-title">
+    <div class="hero-village layer" style="--depth:18">${villageSvg()}</div>
+    <div class="hero-copy">
+      <p class="eyebrow">Winter 2026</p>
+      <h1 id="closed-title">The market has <em>closed</em></h1>
+      <p class="hero-lead">The stalls are packed up and the lights are dimmed. Thank you for stopping by, and happy holidays!</p>
+    </div>
+  </section>`
 
 export const notFound = () =>
   panel(`<h1>This stall has packed up</h1><p>We couldn't find that page.</p><div class="actions"><a class="btn btn-primary" href="#/">Back to the square</a></div>`, 'narrow')

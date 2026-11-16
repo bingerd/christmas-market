@@ -1,5 +1,6 @@
 import './styles.css'
-import { FORM_FIELDS, FORM_TYPE_LABELS, FORM_URL, NO_DELIVERY_LABEL } from './config.ts'
+import { CLOSES_AT, FORM_FIELDS, FORM_TYPE_LABELS, FORM_URL, NO_DELIVERY_LABEL } from './config.ts'
+import { formatTimeLeft, timeLeft } from './closing.ts'
 import { buildFormUrl } from './formLink.ts'
 import { type Pick, needsDelivery } from './pick.ts'
 import { installParallax } from './scene/parallax.ts'
@@ -14,11 +15,19 @@ import { enlarge, sizePhotos } from './views/ui.ts'
 
 const app = document.querySelector<HTMLElement>('#app')!
 const pill = document.querySelector<HTMLElement>('#pick-pill')!
+const chip = document.querySelector<HTMLElement>('#countdown-chip')!
 document.querySelector('#sky-stars')!.innerHTML = starsSvg()
 document.querySelector('#sky-line')!.innerHTML = skylineSvg()
 document.querySelector('#sky-santa .sleigh')!.innerHTML = santaSvg()
 document.querySelector('.santa-hat')!.innerHTML = sprite(SANTA_HAT, PAL)
 document.querySelector('.cocoa')!.innerHTML = sprite(STEAM, PAL, 'class="steam"') + sprite(COCOA, PAL)
+
+// dev only: preview another moment with ?now=2026-11-18T00:00:01
+const nowParam = import.meta.env.DEV ? new URLSearchParams(location.search).get('now') : null
+const clockOffset = nowParam ? new Date(nowParam).getTime() - Date.now() : 0
+const now = () => new Date(Date.now() + (clockOffset || 0))
+const closesAt = new Date(CLOSES_AT)
+const isClosed = () => !timeLeft(now(), closesAt)
 
 let state: State = load()
 let rendered = ''
@@ -49,6 +58,7 @@ const redirect = (path: string) => {
 }
 
 const view = ([page, id]: string[]): string => {
+  if (isClosed()) return pages.closed()
   switch (page) {
     case '':
     case 'choose':
@@ -70,13 +80,14 @@ const view = ([page, id]: string[]): string => {
   }
 }
 
-const pageName = (page: string) => (page === 'choose' || !page ? 'home' : page)
+const pageName = (page: string) => (isClosed() ? 'closed' : page === 'choose' || !page ? 'home' : page)
 
 const render = (animate = true) => {
   const [page, id] = route()
   const name = pageName(page)
-  const key = `${name}/${id ?? ''}`
-  pill.innerHTML = pages.pickPill(state)
+  const key = name === 'closed' ? 'closed/' : `${name}/${id ?? ''}`
+  pill.innerHTML = isClosed() ? '' : pages.pickPill(state)
+  chip.hidden = isClosed()
 
   // "/" and "/choose" are the same page: just scroll instead of re-rendering
   if (key === rendered && name === 'home') {
@@ -91,6 +102,7 @@ const render = (animate = true) => {
     document.body.dataset.page = name
     app.innerHTML = view([page, id])
     sizePhotos(app)
+    tick()
     if (focusSel) app.querySelector<HTMLElement>(focusSel)?.focus({ preventScroll: true })
     // on phones the market square is wider than the screen: start on the tree
     const map = app.querySelector<HTMLElement>('.market-map')
@@ -155,6 +167,18 @@ app.addEventListener('submit', (e) => {
   }
   location.hash = '#/review'
 })
+
+/** Keep every [data-countdown] ticking; close the market the moment time runs out. */
+const tick = () => {
+  const left = timeLeft(now(), closesAt)
+  if (!left) {
+    if (rendered !== 'closed/') render(false)
+    return
+  }
+  const text = formatTimeLeft(left)
+  for (const el of document.querySelectorAll<HTMLElement>('[data-countdown]')) el.textContent = text
+}
+setInterval(tick, 1000)
 
 installParallax()
 let resizing = 0

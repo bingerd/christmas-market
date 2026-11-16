@@ -1645,3 +1645,55 @@ legend {
     transition: none !important;
   }
 }
+
+/* --- closing countdown --------------------------------------------------- */
+.topbar-end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.countdown-chip {
+  --notch: 3px;
+  flex: none;
+  padding: 7px 12px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  background: var(--glass);
+  box-shadow: inset 0 0 0 1px var(--glass-line);
+  clip-path: var(--pixel-corners);
+}
+.countdown-chip [data-countdown] {
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.countdown-chip[hidden],
+body[data-page='home'] .countdown-chip {
+  display: none;
+}
+@media (max-width: 560px) {
+  .countdown-chip .chip-label {
+    display: none;
+  }
+}
+.hero-countdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: -12px 0 28px;
+}
+.hero-countdown strong {
+  font-family: var(--font-pixel);
+  font-size: clamp(28px, 3vw, 40px);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+  text-shadow:
+    0 0 24px rgb(255 179 71 / 0.4),
+    0 4px 0 rgb(0 0 0 / 0.4);
+}
+.hero.closed .hero-village {
+  filter: brightness(0.6) saturate(0.7);
+}
