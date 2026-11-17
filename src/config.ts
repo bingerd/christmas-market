@@ -26,6 +26,6 @@ export const NO_DELIVERY_LABEL = 'Not applicable (donation)'
 /**
  * When the market closes (Amsterdam time). After this moment every page shows
  * a "the market has closed" notice instead of the stalls. In `npm run dev` you
- * can preview another moment with `?now=2026-11-18T00:00:01`.
+ * can preview another moment with `?now=2026-11-17T14:30:01`.
  */
-export const CLOSES_AT = '2026-11-18T00:00:00+01:00'
+export const CLOSES_AT = '2026-11-17T14:30:00+01:00'
